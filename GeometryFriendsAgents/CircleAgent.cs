@@ -145,7 +145,7 @@ namespace GeometryFriendsAgents
              JUMP = 3
              GROW = 4
             */
-            currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
+            currentAction = possibleMoves[0];
             
             //send a message to the rectangle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
