@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Levels>
+  <Level1>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="104" Y="408" />
+    <Collectibles>
+      <Collectible X="152" Y="616" />
+      <Collectible X="936" Y="616" />
+      <Collectible X="1192" Y="616" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="400" height="32" X="24" Y="456" centered="false" />
+      <Obstacle width="272" height="48" X="984" Y="728" centered="false" />
+      <Obstacle width="32" height="240" X="392" Y="456" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <TimeLimit value="180" />
+  </Level1>
+  <Level2>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="120" Y="264" />
+    <Collectibles>
+      <Collectible X="120" Y="136" />
+      <Collectible X="1192" Y="728" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="16" height="32" X="24" Y="40" centered="false" />
+      <Obstacle width="320" height="32" X="936" Y="648" centered="false" />
+      <Obstacle width="352" height="32" X="24" Y="312" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <TimeLimit value="120" />
+  </Level2>
+  <Level3>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="136" Y="712" />
+    <Collectibles>
+      <Collectible X="648" Y="552" />
+      <Collectible X="1080" Y="712" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="400" height="48" X="456" Y="728" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <TimeLimit value="120" />
+  </Level3>
+  <Level4>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="152" Y="712" />
+    <Collectibles>
+      <Collectible X="152" Y="552" />
+      <Collectible X="1128" Y="552" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="512" height="64" X="744" Y="696" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <TimeLimit value="120" />
+  </Level4>
+  <Level5>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="1128" Y="152" />
+    <Collectibles>
+      <Collectible X="136" Y="632" />
+      <Collectible X="1096" Y="632" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="144" height="32" X="440" Y="600" centered="false" />
+      <Obstacle width="16" height="400" X="664" Y="216" centered="false" />
+      <Obstacle width="144" height="32" X="664" Y="600" centered="false" />
+      <Obstacle width="32" height="64" X="776" Y="616" centered="false" />
+      <Obstacle width="576" height="32" X="664" Y="216" centered="false" />
+      <Obstacle width="32" height="416" X="552" Y="216" centered="false" />
+      <Obstacle width="544" height="32" X="40" Y="216" centered="false" />
+      <Obstacle width="32" height="384" X="664" Y="232" centered="false" />
+      <Obstacle width="112" height="32" X="360" Y="664" centered="false" />
+      <Obstacle width="112" height="32" X="776" Y="664" centered="false" />
+      <Obstacle width="32" height="96" X="440" Y="600" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <TimeLimit value="240" />
+  </Level5>
+</Levels>
