@@ -59,8 +59,8 @@ namespace GeometryFriendsAgents
             //messages exchange
             messages = new List<AgentMessage>();
         }
-
-        //implements abstract rectangle interface: used to setup the initial information so that the agent has basic knowledge about the level
+        
+        // See Setup@CicleAgent.cs for parameter details
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
             numbersInfo = nI;
@@ -79,7 +79,7 @@ namespace GeometryFriendsAgents
             //DebugSensorsInfo();
         }
 
-        //implements abstract rectangle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
+        // See SensorsUpdated@CicleAgent.cs for parameter details
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
             nCollectiblesLeft = nC;

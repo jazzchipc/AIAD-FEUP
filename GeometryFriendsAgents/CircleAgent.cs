@@ -67,7 +67,8 @@ namespace GeometryFriendsAgents
             possibleMoves = new List<Moves>();
             possibleMoves.Add(Moves.ROLL_LEFT);
             possibleMoves.Add(Moves.ROLL_RIGHT);
-            possibleMoves.Add(Moves.JUMP);                
+            possibleMoves.Add(Moves.JUMP);
+            possibleMoves.Add(Moves.GROW);          
       
             //history keeping
             uncaughtCollectibles = new List<CollectibleRepresentation>();
@@ -78,40 +79,59 @@ namespace GeometryFriendsAgents
             messages = new List<AgentMessage>();
         }
 
-        //implements abstract circle interface: used to setup the initial information so that the agent has basic knowledge about the level
+        /// <summary>
+        /// implements abstract circle interface: used to setup the initial information so that the agent has basic knowledge about the level
+        /// </summary>
+        /// <param name="nI">This structure contains the number of obstacles, the number of character specific platforms (Circle & Rectangle Platforms) and the total number of purple diamonds within the level.</param>
+        /// <param name="rI">This structure contains the current information on the rectangle agent, such as position (X and Y), velocity (X and Y) and its current height.</param>
+        /// <param name="cI">This array contains the current information on the circle agent, such as position (X and Y) and velocity (X and Y).</param>
+        /// <param name="oI">This array contains all the information about the obstacles (default obstacles, not character specific obstacles) in the level, such as the center coordinates of the platform (X and Y) and the platform’s height and width.</param>
+        /// <param name="rPI">This array contains all the information about Rectangle specific platforms in the level, such as the center coordinates of the platform (X and Y) and the platform’s height and width.</param>
+        /// <param name="cPI">This array contains all the information about Circle specific platforms in the level, such as the center coordinates of the platform (X and Y) and the platform’s height and width.</param>
+        /// <param name="colI">This array contains the information about the coordinates (center X and Y positions) of all the collectibles (purple diamonds) in the level.</param>
+        /// <param name="area">Specifies the definition of the rectangle area in which the game unfolds.</param>
+        /// <param name="timeLimit">Specifies the amount of time the agent has to solve the level during the competition.</param>
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
-            numbersInfo = nI;
-            nCollectiblesLeft = nI.CollectiblesCount;
-            rectangleInfo = rI;
-            circleInfo = cI;
-            obstaclesInfo = oI;
-            rectanglePlatformsInfo = rPI;
-            circlePlatformsInfo = cPI;
-            collectiblesInfo = colI;
-            uncaughtCollectibles = new List<CollectibleRepresentation>(collectiblesInfo);
+            this.numbersInfo = nI;
+            this.nCollectiblesLeft = nI.CollectiblesCount;
+            this.rectangleInfo = rI;
+            this.circleInfo = cI;
+            this.obstaclesInfo = oI;
+            this.rectanglePlatformsInfo = rPI;
+            this.circlePlatformsInfo = cPI;
+            this.collectiblesInfo = colI;
+            this.uncaughtCollectibles = new List<CollectibleRepresentation>(collectiblesInfo);
             this.area = area;
 
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
-            messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
+            this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
             //DebugSensorsInfo();
         }
 
-        //implements abstract circle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
-        /*WARNING: this method is called independently from the agent update - Update(TimeSpan elapsedGameTime) - so care should be taken when using complex 
-         * structures that are modified in both (e.g. see operation on the "remaining" collection)      
-         */
+        /// <summary>
+        /// implements abstract circle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
+        /// ***WARNING***: this method is called independently from the agent update - Update(TimeSpan elapsedGameTime) - so care should be taken when using complex 
+        /// structures that are modified in both(e.g.see operation on the "remaining" collection)
+        /// </summary>
+        /// <param name="nC">The current number of collectibles within the level.</param>
+        /// <param name="rI">This structure contains the current information on the rectangle agent, such as position (X and Y), velocity (X and Y) and its current height.</param>
+        /// <param name="cI">This array contains the current information on the circle agent, such as position (X and Y) and velocity (X and Y).</param>
+        /// <param name="colI">This array contains the information about the coordinates (center X and Y positions) of all the collectibles (purple diamonds) in the level.</param>
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
-            nCollectiblesLeft = nC;
+            this.nCollectiblesLeft = nC;
 
-            rectangleInfo = rI;
-            circleInfo = cI;
-            collectiblesInfo = colI;
+            this.rectangleInfo = rI;
+            this.circleInfo = cI;
+            this.collectiblesInfo = colI;
+
+            /* The lock keyword ensures that one thread does not enter a critical section of code while another thread is in the critical section. 
+            If another thread tries to enter a locked code, it will wait, block, until the object is released. */
             lock (remaining)
             {
-                remaining = new List<CollectibleRepresentation>(collectiblesInfo);
+                this.remaining = new List<CollectibleRepresentation>(collectiblesInfo);
             }
 
             //DebugSensorsInfo();
@@ -120,7 +140,7 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: provides the circle agent with a simulator to make predictions about the future level state
         public override void ActionSimulatorUpdated(ActionSimulator updatedSimulator)
         {
-            predictor = updatedSimulator;
+            this.predictor = updatedSimulator;
         }
 
         //implements abstract circle interface: signals if the agent is actually implemented or not
@@ -145,7 +165,7 @@ namespace GeometryFriendsAgents
              JUMP = 3
              GROW = 4
             */
-            currentAction = possibleMoves[0];
+            currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
             
             //send a message to the rectangle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
