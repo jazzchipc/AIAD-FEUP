@@ -146,13 +146,13 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: signals if the agent is actually implemented or not
         public override bool ImplementedAgent()
         {
-            return implementedAgent;
+            return this.implementedAgent;
         }
 
         //implements abstract circle interface: provides the name of the agent to the agents manager in GeometryFriends
         public override string AgentName()
         {
-            return agentName;
+            return this.agentName;
         }
 
         //simple algorithm for choosing a random action for the circle agent
@@ -165,8 +165,18 @@ namespace GeometryFriendsAgents
              JUMP = 3
              GROW = 4
             */
-            currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
-            
+
+            //currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
+
+            if (this.collectiblesInfo.Length <= 0)
+            {
+                currentAction = Moves.NO_ACTION;    // collected all
+            }
+            else
+            {
+                currentAction = this.MoveUnderDiamond(this.collectiblesInfo[0]);
+            }
+
             //send a message to the rectangle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
         }
@@ -332,6 +342,37 @@ namespace GeometryFriendsAgents
                     }
                 }
             }
+        }
+
+        private Moves MoveUnderDiamond(CollectibleRepresentation diamondRepresentation)
+        {
+            float circleX = this.circleInfo.X;
+            float circleY = this.circleInfo.Y;
+
+            float diamondX = diamondRepresentation.X;
+            float diamondY = diamondRepresentation.Y;
+
+            if(Math.Abs(circleX - diamondX) <= 200)
+            {
+                return Moves.JUMP;
+            }
+            else if (circleX > diamondX)
+            {
+                return Moves.ROLL_LEFT;
+            }
+            else if (circleX < diamondX)
+            {
+                return Moves.ROLL_RIGHT;
+            }
+            else
+            {
+                return Moves.NO_ACTION;
+            }
+        }
+
+        private class RequestCreator
+        {
+
         }
     }
 }

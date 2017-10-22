@@ -203,5 +203,10 @@ namespace GeometryFriendsAgents
                 }
             }
         }
+
+        private class RequestHandler
+        {
+
+        }
     }
 }
