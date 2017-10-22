@@ -369,11 +369,6 @@ namespace GeometryFriendsAgents
                 return Moves.NO_ACTION;
             }
         }
-
-        private class RequestCreator
-        {
-
-        }
     }
 }
 
