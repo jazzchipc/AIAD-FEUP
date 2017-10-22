@@ -352,7 +352,13 @@ namespace GeometryFriendsAgents
             float diamondX = diamondRepresentation.X;
             float diamondY = diamondRepresentation.Y;
 
-            if(Math.Abs(circleX - diamondX) <= 200)
+            // FOR TESTING COMMUNICATION
+            Request request = new Request(Request.Type.MOVE_RIGHT);
+            this.messages.Add(request.message);
+            Log.LogInformation("Circle sent a request to: " + request.type);
+            // END TESTING
+
+            if (Math.Abs(circleX - diamondX) <= 200)
             {
                 return Moves.JUMP;
             }

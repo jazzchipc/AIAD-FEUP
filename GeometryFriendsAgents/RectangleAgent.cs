@@ -200,13 +200,26 @@ namespace GeometryFriendsAgents
                     {
                         Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
                     }
+
+                    if(item.Attachment.GetType() == typeof(Request))
+                    {
+                        RequestHandler((Request)item.Attachment);
+                    }
                 }
+                
             }
         }
 
-        private class RequestHandler
+        /// <summary>
+        /// Main function for request handling.
+        /// </summary>
+        /// <param name="request">Request object received inside an AgentMessage.</param>
+        private void RequestHandler(Request request)
         {
-
+            if(request.type == Request.Type.MOVE_RIGHT)
+            {
+                this.currentAction = Moves.MOVE_RIGHT;
+            }
         }
     }
 }
