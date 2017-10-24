@@ -18,10 +18,10 @@ namespace GeometryFriendsAgents
     {
         //agent implementation specificiation
         private bool implementedAgent;
-        private string agentName = "RandPredictorCircle";
+        private string agentName = "AIADCircle";
 
         //auxiliary variables for agent action
-        private Moves currentAction;
+        private Moves currentAction = Moves.NO_ACTION;
         private List<Moves> possibleMoves;
         private long lastMoveTime;
         private Random rnd;
@@ -52,6 +52,10 @@ namespace GeometryFriendsAgents
 
         //Area of the game screen
         private Rectangle area;
+
+        //Custom settings
+        int iterationCount = 0;
+        int moveStep = 4;
 
         public CircleAgent()
         {
@@ -156,7 +160,7 @@ namespace GeometryFriendsAgents
         }
 
         //simple algorithm for choosing a random action for the circle agent
-        private void RandomAction()
+        private void DecideAction()
         {
             /*
              Circle Actions
@@ -190,21 +194,18 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
-            //Every second one new action is choosen
-            if (lastMoveTime == 60)
-                lastMoveTime = 0;
-
-            if ((lastMoveTime) <= (DateTime.Now.Second) && (lastMoveTime < 60))
+            // Execute an action every 'moveStep' cycles
+            if(iterationCount == moveStep)
             {
-                if (!(DateTime.Now.Second == 59))
-                {
-                    RandomAction();
-                    lastMoveTime = lastMoveTime + 1;
-                    //DebugSensorsInfo();                    
-                }
-                else
-                    lastMoveTime = 60;
+                DecideAction();
+                iterationCount = 0;
             }
+            else
+            {
+                currentAction = Moves.NO_ACTION;
+            }
+
+            iterationCount++;
 
             //check if any collectible was caught
             lock (remaining)
@@ -344,13 +345,20 @@ namespace GeometryFriendsAgents
             }
         }
 
+        
+
         private Moves MoveUnderDiamond(CollectibleRepresentation diamondRepresentation)
         {
             float circleX = this.circleInfo.X;
             float circleY = this.circleInfo.Y;
 
+            float circleVelX = this.circleInfo.VelocityX;
+            float circleVelY = this.circleInfo.VelocityY;
+
             float diamondX = diamondRepresentation.X;
             float diamondY = diamondRepresentation.Y;
+
+            float positionToDiamondX = circleX - diamondX;
 
             // FOR TESTING COMMUNICATION
             Request request = new Request(Request.Type.MOVE_RIGHT);
@@ -358,22 +366,36 @@ namespace GeometryFriendsAgents
             Log.LogInformation("Circle sent a request to: " + request.type);
             // END TESTING
 
-            if (Math.Abs(circleX - diamondX) <= 200)
+            if(this.predictor != null)
             {
-                return Moves.JUMP;
+                ActionSimulator sim = predictor;
+                sim.Update(1);
+
+                float predictedPositionToDiamondX = sim.CirclePositionX - diamondX;
+
+                if (predictedPositionToDiamondX < -10) // circle is to the left of the diamong
+                {
+                    return Moves.ROLL_RIGHT;
+                }
+                else if(predictedPositionToDiamondX > 10)
+                {
+                    return Moves.ROLL_LEFT;
+                }
+                else
+                {
+                    return Moves.NO_ACTION;
+                }
             }
-            else if (circleX > diamondX)
-            {
-                return Moves.ROLL_LEFT;
-            }
-            else if (circleX < diamondX)
-            {
-                return Moves.ROLL_RIGHT;
-            }
-            else
-            {
-                return Moves.NO_ACTION;
-            }
+            
+            return Moves.NO_ACTION;
+        }
+
+        private Moves RequireMoveToX(float X)
+        {
+            
+
+            if (this.rectangleInfo.X <X) { }
+            return Moves.NO_ACTION;
         }
     }
 }
