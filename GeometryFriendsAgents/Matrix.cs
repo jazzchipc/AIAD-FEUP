@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using System;
+using GeometryFriendsAgents;
+using GeometryFriends.AI.Perceptions.Information;
+using System.Drawing;
 
 namespace GeometryFriendsAgents
 {
     public class Node
     {
-        public enum Type { Space, Circle, Rectangle, Diamond, Obstacle,  CircleObstacle, RectangleObstacle};
+        public enum Type { Space, Circle, Rectangle, Diamond, Obstacle, CirclePlatform, RectanglePlatform};
 
         public Type type {  get; private set;  }
         public int x { get; private set; }
@@ -52,7 +55,7 @@ namespace GeometryFriendsAgents
 
         public Matrix(int numOfRows, int numOfCols)
         {
-            this.nodes = new Node[numOfRows, numOfCols];
+            this.nodes = new Node[numOfRows + 2, numOfCols + 2];
         }
 
         public void addNode(Node node)
@@ -64,5 +67,28 @@ namespace GeometryFriendsAgents
         {
             return this.nodes[y, x];
         }
+
+        public static Matrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
+        {
+            Matrix matrix = new Matrix(area.Height, area.Width);
+
+            int rectangleX = (int)rI.X;
+            int rectangleY = (int)rI.Y;
+            int rectangleWidth = (int)rI.Height; // TODO: calculate width from height
+
+            for(int x = rectangleX - 10; x < rectangleX + 10; x++)
+            {
+                for(int y = rectangleY - 10; y < rectangleY + 10; y++)
+                {
+                    matrix.addNode(new Node(Node.Type.Rectangle, x, y));
+                }
+            }
+            
+            return matrix;
+        }
+
     }
+
+    
+
 }

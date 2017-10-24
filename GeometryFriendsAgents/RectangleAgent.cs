@@ -146,11 +146,11 @@ namespace GeometryFriendsAgents
         //typically used console debugging used in previous implementations of GeometryFriends
         protected void DebugSensorsInfo()
         {
-            Log.LogInformation("Rectangle Aagent - " + numbersInfo.ToString());
+            Log.LogInformation("Rectangle Agent - " + numbersInfo.ToString());
 
-            Log.LogInformation("Rectangle Aagent - " + rectangleInfo.ToString());
+            Log.LogInformation("Rectangle Agent - " + rectangleInfo.ToString());
 
-            Log.LogInformation("Rectangle Aagent - " + circleInfo.ToString());
+            Log.LogInformation("Rectangle Agent - " + circleInfo.ToString());
 
             foreach (ObstacleRepresentation i in obstaclesInfo)
             {

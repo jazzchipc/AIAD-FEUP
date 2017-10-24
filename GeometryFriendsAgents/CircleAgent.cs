@@ -57,6 +57,8 @@ namespace GeometryFriendsAgents
         int iterationCount = 0;
         int moveStep = 4;
 
+        Matrix matrix;
+
         public CircleAgent()
         {
             //Change flag if agent is not to be used
@@ -111,7 +113,10 @@ namespace GeometryFriendsAgents
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
-            //DebugSensorsInfo();
+            // create game matrix
+            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
+
+            DebugSensorsInfo();
         }
 
         /// <summary>
