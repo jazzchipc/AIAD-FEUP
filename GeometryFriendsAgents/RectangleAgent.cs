@@ -28,6 +28,7 @@ namespace GeometryFriendsAgents
         private CountInformation numbersInfo;
         private RectangleRepresentation rectangleInfo;
         private CircleRepresentation circleInfo;
+
         private ObstacleRepresentation[] obstaclesInfo;
         private ObstacleRepresentation[] rectanglePlatformsInfo;
         private ObstacleRepresentation[] circlePlatformsInfo;
@@ -39,7 +40,7 @@ namespace GeometryFriendsAgents
 
         //Area of the game screen
         protected Rectangle area;
-
+        
         public RectangleAgent()
         {
             //Change flag if agent is not to be used
@@ -59,7 +60,7 @@ namespace GeometryFriendsAgents
             //messages exchange
             messages = new List<AgentMessage>();
         }
-        
+
         // See Setup@CicleAgent.cs for parameter details
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
@@ -201,12 +202,12 @@ namespace GeometryFriendsAgents
                         Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
                     }
 
-                    if(item.Attachment.GetType() == typeof(Request))
+                    if (item.Attachment.GetType() == typeof(Request))
                     {
                         RequestHandler((Request)item.Attachment);
                     }
                 }
-                
+
             }
         }
 
@@ -216,10 +217,42 @@ namespace GeometryFriendsAgents
         /// <param name="request">Request object received inside an AgentMessage.</param>
         private void RequestHandler(Request request)
         {
-            if(request.type == Request.Type.MOVE_RIGHT)
+            bool validRequest = ValidRequest(request);
+            Answer.Type answerType;
+
+            if (validRequest)
             {
-                this.currentAction = Moves.MOVE_RIGHT;
+                request.command.execute(this);
+                answerType = Answer.Type.YES;
             }
+            else
+            {
+                answerType = Answer.Type.NO;
+            }
+
+            Answer answer = new Answer(answerType, request.id);
+            this.messages.Add(answer.message);
         }
+
+        private bool ValidRequest(Request request)
+        {
+            if (true)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Functions below describe what effects a command has.
+         */
+        public void MoveLeft()
+        {
+            this.currentAction = Moves.MOVE_LEFT;
+        }
+
+
     }
+
 }

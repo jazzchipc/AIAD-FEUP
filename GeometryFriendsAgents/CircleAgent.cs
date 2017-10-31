@@ -8,6 +8,7 @@ using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 
 namespace GeometryFriendsAgents
 {
@@ -59,6 +60,9 @@ namespace GeometryFriendsAgents
 
         Matrix matrix;
 
+        //Communication settings
+        Queue<Request> requests;
+
         public CircleAgent()
         {
             //Change flag if agent is not to be used
@@ -83,6 +87,9 @@ namespace GeometryFriendsAgents
 
             //messages exchange
             messages = new List<AgentMessage>();
+
+            //custom
+            requests = new Queue<Request>();
         }
 
         /// <summary>
@@ -346,6 +353,11 @@ namespace GeometryFriendsAgents
                     {
                         Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
                     }
+
+                    if (item.Attachment.GetType() == typeof(Answer))
+                    {
+                        AnswerHandler((Answer)item.Attachment);
+                    }
                 }
             }
         }
@@ -366,9 +378,7 @@ namespace GeometryFriendsAgents
             float positionToDiamondX = circleX - diamondX;
 
             // FOR TESTING COMMUNICATION
-            Request request = new Request(Request.Type.MOVE_RIGHT);
-            this.messages.Add(request.message);
-            Log.LogInformation("Circle sent a request to: " + request.type);
+            this.SendRequest(new Request(new Command.MoveLeft()));
             // END TESTING
 
             if(this.predictor != null)
@@ -395,13 +405,26 @@ namespace GeometryFriendsAgents
             return Moves.NO_ACTION;
         }
 
-        private Moves RequireMoveToX(float X)
+        public void SendRequest(Request request)
         {
-            
-
-            if (this.rectangleInfo.X <X) { }
-            return Moves.NO_ACTION;
+            this.requests.Enqueue(request);
+            this.messages.Add(request.message);
         }
+
+        public void AnswerHandler(Answer answer)
+        {
+            if(answer.idOfRequest == this.requests.Peek().id)
+            {
+                Request fulfilled = this.requests.Dequeue();
+                System.Diagnostics.Debug.WriteLine("Request " + fulfilled.id + " fulfilled.");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Missing an answer");
+                this.messages.Add(this.requests.Peek().message);
+            }
+        }
+        
     }
 }
 
