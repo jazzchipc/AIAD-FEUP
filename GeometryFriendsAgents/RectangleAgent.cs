@@ -61,6 +61,7 @@ namespace GeometryFriendsAgents
             messages = new List<AgentMessage>();
         }
 
+
         // See Setup@CicleAgent.cs for parameter details
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
@@ -79,7 +80,7 @@ namespace GeometryFriendsAgents
 
             //DebugSensorsInfo();
         }
-
+              
         // See SensorsUpdated@CicleAgent.cs for parameter details
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
@@ -250,6 +251,16 @@ namespace GeometryFriendsAgents
         public void MoveLeft()
         {
             this.currentAction = Moves.MOVE_LEFT;
+        }
+
+        public void MoveRight()
+        {
+            this.currentAction = Moves.MOVE_RIGHT;
+        }
+
+        internal void NoAction()
+        {
+            this.currentAction = Moves.NO_ACTION;
         }
 
 

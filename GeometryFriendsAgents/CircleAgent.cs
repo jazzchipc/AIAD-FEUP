@@ -377,28 +377,38 @@ namespace GeometryFriendsAgents
 
             float positionToDiamondX = circleX - diamondX;
 
-            // FOR TESTING COMMUNICATION
-            this.SendRequest(new Request(new Command.MoveLeft()));
-            // END TESTING
-
             if(this.predictor != null)
             {
                 ActionSimulator sim = predictor;
                 sim.Update(1);
+                
+                float rectanglePredictedPositionToDiamondX = sim.RectanglePositionX - diamondX;
+                float circlePredictedPositionToRectangleX = sim.CirclePositionX - sim.RectanglePositionX;
 
-                float predictedPositionToDiamondX = sim.CirclePositionX - diamondX;
-
-                if (predictedPositionToDiamondX < -10) // circle is to the left of the diamong
+                if (circlePredictedPositionToRectangleX - rectangleInfo.Height < -10) // circle is to the left of the diamong
                 {
                     return Moves.ROLL_RIGHT;
                 }
-                else if(predictedPositionToDiamondX > 10)
+                else if(circlePredictedPositionToRectangleX - rectangleInfo.Height > 10)
                 {
                     return Moves.ROLL_LEFT;
                 }
                 else
                 {
                     return Moves.NO_ACTION;
+                }
+
+                if(rectanglePredictedPositionToDiamondX < -10)
+                {
+                    this.SendRequest(new Request(new Command.MoveRight()));
+                }
+                else if(rectanglePredictedPositionToDiamondX > 10)
+                {
+                    this.SendRequest(new Request(new Command.MoveLeft()));
+                }
+                else
+                {
+                    this.SendRequest(new Request(new Command.NoAction()));
                 }
             }
             

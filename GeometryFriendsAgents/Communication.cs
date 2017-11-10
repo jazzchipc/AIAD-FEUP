@@ -67,5 +67,31 @@ namespace GeometryFriendsAgents
             }
 
         }
+
+        public class MoveRight : Command
+        {
+            public override void execute(CircleAgent executor)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void execute(RectangleAgent executor)
+            {
+                executor.MoveRight();
+            }
+        }
+
+        internal class NoAction : Command
+        {
+            public override void execute(CircleAgent executor)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override void execute(RectangleAgent executor)
+            {
+                executor.NoAction();
+            }
+        }
     }
 }
