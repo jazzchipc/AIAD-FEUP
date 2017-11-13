@@ -114,7 +114,7 @@ namespace GeometryFriendsAgents
              MORPH_DOWN = 8
             */
 
-            currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
+            //currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
 
             //send a message to the circle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
@@ -263,6 +263,10 @@ namespace GeometryFriendsAgents
             this.currentAction = Moves.NO_ACTION;
         }
 
+        internal void MorphDown()
+        {
+            this.currentAction = Moves.MORPH_DOWN;
+        }
 
     }
 

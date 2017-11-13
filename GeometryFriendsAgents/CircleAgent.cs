@@ -190,7 +190,7 @@ namespace GeometryFriendsAgents
             }
             else
             {
-                currentAction = this.MoveUnderDiamond(this.collectiblesInfo[0]);
+                currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
             }
 
             //send a message to the rectangle agent telling what action it chose
@@ -211,10 +211,6 @@ namespace GeometryFriendsAgents
             {
                 DecideAction();
                 iterationCount = 0;
-            }
-            else
-            {
-                currentAction = Moves.NO_ACTION;
             }
 
             iterationCount++;
@@ -362,58 +358,78 @@ namespace GeometryFriendsAgents
             }
         }
 
-        
+        /**
+         * PHYSICAL MOVES
+         * */
 
-        private Moves MoveUnderDiamond(CollectibleRepresentation diamondRepresentation)
+        float positionMargin = 10;
+
+        private Moves CircleJumpOntoRectangle(CollectibleRepresentation diamondToCatch)
         {
+            Moves move = Moves.NO_ACTION;
+
             float circleX = this.circleInfo.X;
             float circleY = this.circleInfo.Y;
 
             float circleVelX = this.circleInfo.VelocityX;
             float circleVelY = this.circleInfo.VelocityY;
 
-            float diamondX = diamondRepresentation.X;
-            float diamondY = diamondRepresentation.Y;
+            float diamondX = diamondToCatch.X;
+            float diamondY = diamondToCatch.Y;
 
             float positionToDiamondX = circleX - diamondX;
+
+            float positionMargin = 10;
 
             if(this.predictor != null)
             {
                 ActionSimulator sim = predictor;
                 sim.Update(1);
-                
+
                 float rectanglePredictedPositionToDiamondX = sim.RectanglePositionX - diamondX;
                 float circlePredictedPositionToRectangleX = sim.CirclePositionX - sim.RectanglePositionX;
 
-                if (circlePredictedPositionToRectangleX - rectangleInfo.Height < -10) // circle is to the left of the diamong
+                SendRectangleToPosition(diamondToCatch.X, sim.RectanglePositionX);
+
+                if (circlePredictedPositionToRectangleX < -positionMargin) // circle is to the left of the diamong
                 {
-                    return Moves.ROLL_RIGHT;
+                    move = Moves.ROLL_RIGHT;
                 }
-                else if(circlePredictedPositionToRectangleX - rectangleInfo.Height > 10)
+                else if (circlePredictedPositionToRectangleX > positionMargin)
                 {
-                    return Moves.ROLL_LEFT;
+                    move = Moves.ROLL_LEFT;
                 }
-                else
+                
+                if(Math.Abs(circlePredictedPositionToRectangleX) <= 200)
                 {
-                    return Moves.NO_ACTION;
+                    move = Moves.JUMP;
                 }
 
-                if(rectanglePredictedPositionToDiamondX < -10)
-                {
-                    this.SendRequest(new Request(new Command.MoveRight()));
-                }
-                else if(rectanglePredictedPositionToDiamondX > 10)
-                {
-                    this.SendRequest(new Request(new Command.MoveLeft()));
-                }
-                else
-                {
-                    this.SendRequest(new Request(new Command.NoAction()));
-                }
             }
-            
-            return Moves.NO_ACTION;
+
+            return move;
         }
+
+        public void SendRectangleToPosition(float x, float rectanglePredictedPositionX)
+        {
+
+            float rectanglePredictedPositionToObjectiveX = rectanglePredictedPositionX - x;
+
+            if (rectanglePredictedPositionToObjectiveX < -positionMargin)
+            {
+                this.SendRequest(new Request(new Command.MoveRight()));
+            }
+            else if (rectanglePredictedPositionToObjectiveX > positionMargin)
+            {
+                this.SendRequest(new Request(new Command.MoveLeft()));
+            }
+            else
+            {
+                this.SendRequest(new Request(new Command.MorphDown()));
+            }
+        }
+
+
 
         public void SendRequest(Request request)
         {

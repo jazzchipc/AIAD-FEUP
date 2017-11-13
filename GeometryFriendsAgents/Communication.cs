@@ -52,29 +52,17 @@ namespace GeometryFriendsAgents
     public abstract class Command
     {
         public abstract void execute(RectangleAgent executor);
-        public abstract void execute(CircleAgent executor);
 
         public class MoveLeft : Command
         {
-            public override void execute(CircleAgent executor)
-            {
-                throw new NotImplementedException();
-            }
-
             public override void execute(RectangleAgent executor)
             {
                 executor.MoveLeft();
             }
-
         }
 
         public class MoveRight : Command
         {
-            public override void execute(CircleAgent executor)
-            {
-                throw new NotImplementedException();
-            }
-
             public override void execute(RectangleAgent executor)
             {
                 executor.MoveRight();
@@ -83,14 +71,17 @@ namespace GeometryFriendsAgents
 
         internal class NoAction : Command
         {
-            public override void execute(CircleAgent executor)
-            {
-                throw new NotImplementedException();
-            }
-
             public override void execute(RectangleAgent executor)
             {
                 executor.NoAction();
+            }
+        }
+
+        internal class MorphDown : Command
+        {
+            public override void execute(RectangleAgent executor)
+            {
+                executor.MorphDown();
             }
         }
     }
