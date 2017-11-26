@@ -237,7 +237,7 @@ namespace GeometryFriendsAgents
 
         private bool ValidRequest(Request request)
         {
-            if (true)
+            if (true) //TODO WTF?
             {
                 return true;
             }
@@ -266,6 +266,11 @@ namespace GeometryFriendsAgents
         internal void MorphDown()
         {
             this.currentAction = Moves.MORPH_DOWN;
+        }
+
+        internal void MorphUp()
+        {
+            this.currentAction = Moves.MORPH_UP;
         }
 
     }

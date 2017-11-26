@@ -84,5 +84,13 @@ namespace GeometryFriendsAgents
                 executor.MorphDown();
             }
         }
+
+        internal class MorphUp : Command
+        {
+            public override void execute(RectangleAgent executor)
+            {
+                executor.MorphUp();
+            }
+        }
     }
 }

@@ -63,6 +63,9 @@ namespace GeometryFriendsAgents
         //Communication settings
         Queue<Request> requests;
 
+        //Status tracking
+        Status agentStatus;
+
         public CircleAgent()
         {
             //Change flag if agent is not to be used
@@ -90,6 +93,8 @@ namespace GeometryFriendsAgents
 
             //custom
             requests = new Queue<Request>();
+
+            agentStatus = new Status();
         }
 
         /// <summary>
@@ -386,11 +391,28 @@ namespace GeometryFriendsAgents
                 ActionSimulator sim = predictor;
                 sim.Update(1);
 
+                //Representation of the future status
+                Status futureStatus = new Status();
+                CircleRepresentation futureCircle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
+                    sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
+                RectangleRepresentation futureRectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
+                    sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
+                futureStatus.Update(futureCircle, futureRectangle, diamondToCatch, AgentType.Circle);
+
+                Log.LogInformation(futureStatus.ToString());
+                Log.LogInformation(diamondToCatch.ToString());
+                Log.LogInformation("Actual Circle: " + circleInfo.ToString());
+                Log.LogInformation("Actual Rectangle: " + rectangleInfo.ToString());
+                Log.LogInformation("Future Circle: " + futureCircle.ToString());
+                Log.LogInformation("Future Rectangle: " + futureRectangle.ToString());
+
+
                 float rectanglePredictedPositionToDiamondX = sim.RectanglePositionX - diamondX;
                 float circlePredictedPositionToRectangleX = sim.CirclePositionX - sim.RectanglePositionX;
 
                 SendRectangleToPosition(diamondToCatch.X, sim.RectanglePositionX);
-
+                
+                /*
                 if (circlePredictedPositionToRectangleX < -positionMargin) // circle is to the left of the diamong
                 {
                     move = Moves.ROLL_RIGHT;
@@ -403,8 +425,22 @@ namespace GeometryFriendsAgents
                 if(Math.Abs(circlePredictedPositionToRectangleX) <= 200)
                 {
                     move = Moves.JUMP;
+                }*/
+                
+                if(futureStatus.LEFT_FROM_TARGET)
+                {
+                    move = Moves.ROLL_RIGHT;
+                }
+                else if(futureStatus.RIGHT_FROM_TARGET)
+                {
+                    move = Moves.ROLL_LEFT;
                 }
 
+                if (futureStatus.NEAR_OTHER_AGENT)
+                {
+                    move = Moves.JUMP;
+                }
+                
             }
 
             return move;
@@ -415,6 +451,7 @@ namespace GeometryFriendsAgents
 
             float rectanglePredictedPositionToObjectiveX = rectanglePredictedPositionX - x;
 
+           
             if (rectanglePredictedPositionToObjectiveX < -positionMargin)
             {
                 this.SendRequest(new Request(new Command.MoveRight()));
@@ -427,6 +464,7 @@ namespace GeometryFriendsAgents
             {
                 this.SendRequest(new Request(new Command.MorphDown()));
             }
+            
         }
 
 
