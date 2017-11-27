@@ -397,14 +397,21 @@ namespace GeometryFriendsAgents
                     sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
                 RectangleRepresentation futureRectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
                     sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
-                futureStatus.Update(futureCircle, futureRectangle, diamondToCatch, AgentType.Circle);
 
+                
+                CircleRepresentation[] circles = new CircleRepresentation[] { futureCircle, new CircleRepresentation() };
+                RectangleRepresentation[] rectangles = new RectangleRepresentation[] { futureRectangle, new RectangleRepresentation() };
+                futureStatus.Update(circles, rectangles, diamondToCatch, AgentType.Circle);
+                
+                                
+
+                /*
                 Log.LogInformation(futureStatus.ToString());
                 Log.LogInformation(diamondToCatch.ToString());
                 Log.LogInformation("Actual Circle: " + circleInfo.ToString());
                 Log.LogInformation("Actual Rectangle: " + rectangleInfo.ToString());
                 Log.LogInformation("Future Circle: " + futureCircle.ToString());
-                Log.LogInformation("Future Rectangle: " + futureRectangle.ToString());
+                Log.LogInformation("Future Rectangle: " + futureRectangle.ToString());*/
 
 
                 float rectanglePredictedPositionToDiamondX = sim.RectanglePositionX - diamondX;
@@ -412,26 +419,12 @@ namespace GeometryFriendsAgents
 
                 SendRectangleToPosition(diamondToCatch.X, sim.RectanglePositionX);
                 
-                /*
-                if (circlePredictedPositionToRectangleX < -positionMargin) // circle is to the left of the diamong
+                
+                if(futureStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
                 {
                     move = Moves.ROLL_RIGHT;
                 }
-                else if (circlePredictedPositionToRectangleX > positionMargin)
-                {
-                    move = Moves.ROLL_LEFT;
-                }
-                
-                if(Math.Abs(circlePredictedPositionToRectangleX) <= 200)
-                {
-                    move = Moves.JUMP;
-                }*/
-                
-                if(futureStatus.LEFT_FROM_TARGET)
-                {
-                    move = Moves.ROLL_RIGHT;
-                }
-                else if(futureStatus.RIGHT_FROM_TARGET)
+                else if(futureStatus.RIGHT_FROM_TARGET != Utils.Quantifier.NONE)
                 {
                     move = Moves.ROLL_LEFT;
                 }
@@ -440,6 +433,7 @@ namespace GeometryFriendsAgents
                 {
                     move = Moves.JUMP;
                 }
+                
                 
             }
 

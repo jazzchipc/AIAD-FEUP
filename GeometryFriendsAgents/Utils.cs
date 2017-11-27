@@ -7,5 +7,7 @@
             float squareWidth = 100;
             return (squareWidth * squareWidth) / height;
         }
+
+        public enum Quantifier { NONE, SLIGHTLY, A_BIT, A_LOT};
     }
 }
