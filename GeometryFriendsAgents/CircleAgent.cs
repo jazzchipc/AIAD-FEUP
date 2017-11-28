@@ -189,6 +189,11 @@ namespace GeometryFriendsAgents
 
             //currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
 
+            //Update Status
+            CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
+            RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
+            this.agentStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle);
+
             if (this.collectiblesInfo.Length <= 0)
             {
                 currentAction = Moves.NO_ACTION;    // collected all
@@ -405,21 +410,21 @@ namespace GeometryFriendsAgents
                 
                                 
 
-                /*
+                
                 Log.LogInformation(futureStatus.ToString());
                 Log.LogInformation(diamondToCatch.ToString());
                 Log.LogInformation("Actual Circle: " + circleInfo.ToString());
                 Log.LogInformation("Actual Rectangle: " + rectangleInfo.ToString());
                 Log.LogInformation("Future Circle: " + futureCircle.ToString());
-                Log.LogInformation("Future Rectangle: " + futureRectangle.ToString());*/
+                Log.LogInformation("Future Rectangle: " + futureRectangle.ToString());
 
 
                 float rectanglePredictedPositionToDiamondX = sim.RectanglePositionX - diamondX;
                 float circlePredictedPositionToRectangleX = sim.CirclePositionX - sim.RectanglePositionX;
 
-                SendRectangleToPosition(diamondToCatch.X, sim.RectanglePositionX);
+                SendRectangleToPosition(diamondToCatch.X + 500, sim.RectanglePositionX);
                 
-                
+                /*
                 if(futureStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
                 {
                     move = Moves.ROLL_RIGHT;
@@ -432,8 +437,62 @@ namespace GeometryFriendsAgents
                 if (futureStatus.NEAR_OTHER_AGENT)
                 {
                     move = Moves.JUMP;
-                }
+                }*/
+
                 
+                if(futureStatus.MOVING_RIGHT == Utils.Quantifier.A_BIT)
+                {
+                    move = Moves.NO_ACTION;
+                }
+                else if(futureStatus.MOVING_RIGHT == Utils.Quantifier.A_LOT)
+                {
+                    move = Moves.ROLL_LEFT;
+                }
+                else
+                {
+                    move = Moves.ROLL_RIGHT;
+                }                
+
+            }
+
+            return move;
+        }
+
+        private Moves Roll(Utils.Direction direction, Utils.Quantifier speed)
+        {
+            Moves move = Moves.NO_ACTION;
+            if(this.predictor != null)
+            {
+                if(direction == Utils.Direction.RIGHT)
+                {
+                    if (this.agentStatus.MOVING_RIGHT == speed)
+                    {
+                        move = Moves.NO_ACTION;
+                    }
+                    else if (this.agentStatus.MOVING_RIGHT < speed) //When the agent is moving with not enough speed
+                    {
+                        move = Moves.ROLL_RIGHT;
+                    }
+                    else //When the agent is moving with excessive speed
+                    {
+                        move = Moves.ROLL_LEFT;
+                    }
+                }
+                else if(direction == Utils.Direction.LEFT)
+                {
+                    if(this.agentStatus.MOVING_LEFT == speed)
+                    {
+                        move = Moves.NO_ACTION;
+                    }
+                    else if(this.agentStatus.MOVING_LEFT < speed) //When the agent is moving with not enough speed
+                    {
+                        move = Moves.ROLL_LEFT;
+                    }
+                    else //When the agent is moving with excessive speed
+                    {
+                        move = Moves.ROLL_RIGHT;
+                    }
+                }
                 
             }
 

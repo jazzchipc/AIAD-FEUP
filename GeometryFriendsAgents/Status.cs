@@ -25,8 +25,8 @@ namespace GeometryFriendsAgents
         private bool Moving;
         private bool Other_Agent_Moving;
 
-        private bool Moving_Right;
-        private bool Moving_Left;
+        private Quantifier Moving_Right;
+        private Quantifier Moving_Left;
 
         private bool Blocked; //TODO When Agent is MOVING but his position doesn't change
         //TODO Implement Status Moving Fast, and Moving Slow OR Moving Direction
@@ -37,6 +37,11 @@ namespace GeometryFriendsAgents
 
         private float a_lot_distance = 200;
         private float a_bit_distance = 50;
+
+        //TODO CHANGE THE SPEEDS
+        private float a_lot_speed = 180;
+        private float a_bit_speed = 100;
+        private float slight_speed = 40;
         //TODO Implement a velocity margin
 
 
@@ -58,8 +63,8 @@ namespace GeometryFriendsAgents
         public bool NEAR_OTHER_AGENT { get => Near_Other_Agent; set => Near_Other_Agent = value; }
         public bool MOVING { get => Moving; set => Moving = value; }
         public bool OTHER_AGENT_MOVING { get => Other_Agent_Moving; set => Other_Agent_Moving = value; }
-        public bool MOVING_RIGHT { get => Moving_Right; set => Moving_Right = value; }
-        public bool MOVING_LEFT { get => Moving_Left; set => Moving_Left = value; }
+        public Quantifier MOVING_RIGHT { get => Moving_Right; set => Moving_Right = value; }
+        public Quantifier MOVING_LEFT { get => Moving_Left; set => Moving_Left = value; }
 
         //This function only cares for the current Agent
         /*
@@ -120,20 +125,20 @@ namespace GeometryFriendsAgents
                 //a lot
                 if(agentXposition > targetRightBound + a_lot_distance)
                 {
-                    this.LEFT_FROM_TARGET = Quantifier.NONE;
                     this.RIGHT_FROM_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
                 else if(agentXposition > targetRightBound + a_bit_distance)
                 {
-                    this.LEFT_FROM_TARGET = Quantifier.NONE;
                     this.RIGHT_FROM_TARGET = Quantifier.A_BIT;
                 }
+                //slightly
                 else
                 {
-                    this.LEFT_FROM_TARGET = Quantifier.NONE;
                     this.RIGHT_FROM_TARGET = Quantifier.SLIGHTLY;
                 }
+
+                this.LEFT_FROM_TARGET = Quantifier.NONE;
             }
             //Agent is left from the target diamond
             else if (agentXposition < targetLeftBound)
@@ -142,19 +147,19 @@ namespace GeometryFriendsAgents
                 if(agentXposition < targetLeftBound - a_lot_distance)
                 {
                     this.LEFT_FROM_TARGET = Quantifier.A_LOT;
-                    this.RIGHT_FROM_TARGET = Quantifier.NONE;
                 }
                 //just a bit
                 else if(agentXposition < targetLeftBound - a_bit_distance)
                 {
                     this.LEFT_FROM_TARGET = Quantifier.A_BIT;
-                    this.RIGHT_FROM_TARGET = Quantifier.NONE;
                 }
+                //slightly
                 else
                 {
                     this.LEFT_FROM_TARGET = Quantifier.SLIGHTLY;
-                    this.RIGHT_FROM_TARGET = Quantifier.NONE;
                 }
+
+                this.RIGHT_FROM_TARGET = Quantifier.NONE;
             }
             //Agent is aligned vertically with target diamond
             else
@@ -172,20 +177,19 @@ namespace GeometryFriendsAgents
                 if(agentYposition < targetUpperBound - a_lot_distance)
                 {
                     this.ABOVE_TARGET = Quantifier.A_LOT;
-                    this.BELOW_TARGET = Quantifier.NONE;
                 }
                 //just a bit
                 else if(agentYposition < targetUpperBound - a_bit_distance)
                 {
                     this.ABOVE_TARGET = Quantifier.A_BIT;
-                    this.BELOW_TARGET = Quantifier.NONE;
                 }
+                //slightly
                 else
                 {
                     this.ABOVE_TARGET = Quantifier.SLIGHTLY;
-                    this.BELOW_TARGET = Quantifier.NONE;
                 }
-                
+
+                this.BELOW_TARGET = Quantifier.NONE;
             }
             //Agent is below the target diamond
             else if (agentYposition > targetLowerBound)
@@ -193,20 +197,20 @@ namespace GeometryFriendsAgents
                 //a lot
                 if(agentYposition > targetLowerBound + a_lot_distance)
                 {
-                    this.ABOVE_TARGET = Quantifier.NONE;
                     this.BELOW_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
                 else if(agentYposition > targetLowerBound + a_bit_distance)
                 {
-                    this.ABOVE_TARGET = Quantifier.NONE;
                     this.BELOW_TARGET = Quantifier.A_BIT;
                 }
+                //slightly
                 else
                 {
-                    this.ABOVE_TARGET = Quantifier.NONE;
                     this.BELOW_TARGET = Quantifier.SLIGHTLY;
                 }
+
+                this.ABOVE_TARGET = Quantifier.NONE;
             }
             //Agent is aligned horizontally with target diamond
             else
@@ -336,20 +340,50 @@ namespace GeometryFriendsAgents
 
             if(agent1Xvel > 0)
             {
-                this.MOVING_RIGHT = true;
-                this.MOVING_LEFT = false;
+                if(agent1Xvel > a_lot_speed)
+                {
+                    this.MOVING_RIGHT = Quantifier.A_LOT;
+                }
+                else if(agent1Xvel > a_bit_speed)
+                {
+                    this.MOVING_RIGHT = Quantifier.A_BIT;
+                }
+                else if(agent1Xvel > slight_speed)
+                {
+                    this.MOVING_RIGHT = Quantifier.SLIGHTLY;
+                }
+                else
+                {
+                    this.MOVING_RIGHT = Quantifier.NONE;
+                }
+                this.MOVING_LEFT = Quantifier.NONE;
                 this.MOVING = true;
             }
             else if(agent1Xvel < 0)
             {
-                this.MOVING_RIGHT = false;
-                this.MOVING_LEFT = true;
+                if(agent1Xvel < -a_lot_speed)
+                {
+                    this.MOVING_LEFT = Quantifier.A_LOT;
+                }
+                else if(agent1Xvel < -a_bit_speed)
+                {
+                    this.MOVING_LEFT = Quantifier.A_BIT;
+                }
+                else if(agent1Xvel < -slight_speed)
+                {
+                    this.MOVING_LEFT = Quantifier.SLIGHTLY;
+                }
+                else
+                {
+                    this.MOVING_LEFT = Quantifier.NONE;
+                }
+                this.MOVING_RIGHT = Quantifier.NONE;
                 this.MOVING = true;
             }
             else
             {
-                this.MOVING_RIGHT = false;
-                this.MOVING_LEFT = false;
+                this.MOVING_RIGHT = Quantifier.NONE;
+                this.MOVING_LEFT = Quantifier.NONE;
                 this.MOVING = false;
             }
         }

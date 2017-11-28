@@ -9,5 +9,6 @@
         }
 
         public enum Quantifier { NONE, SLIGHTLY, A_BIT, A_LOT};
+        public enum Direction { RIGHT, LEFT };
     }
 }
