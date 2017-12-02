@@ -58,7 +58,7 @@ namespace GeometryFriendsAgents
         int iterationCount = 0;
         int moveStep = 4;
 
-        Matrix matrix;
+        ExMatrix matrix;
 
         //Communication settings
         Queue<Request> requests;
@@ -126,7 +126,7 @@ namespace GeometryFriendsAgents
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
             // create game matrix
-            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
+            this.matrix = ExMatrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
             DebugSensorsInfo();
         }

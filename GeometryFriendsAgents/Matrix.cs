@@ -6,17 +6,17 @@ using System.Drawing;
 
 namespace GeometryFriendsAgents
 {
-    public class Node
+    public class ExNode
     {
         public enum Type { Space, Circle, Rectangle, Diamond, Obstacle, CirclePlatform, RectanglePlatform};
 
-        public Type type {  get; private set;  }
-        public int x { get; private set; }
-        public int y { get; private set; }
+        public Type type {  get; protected set;  }
+        public int x { get; protected set; }
+        public int y { get; protected set; }
 
-        public List<Edge> adj { get; private set; }
+        public List<Edge> adj { get; protected set; }
 
-        public Node(Type type, int x, int y)
+        public ExNode(Type type, int x, int y)
         {
             this.adj = new List<Edge>();
             this.type = type;
@@ -38,39 +38,39 @@ namespace GeometryFriendsAgents
 
     public class Edge
     {
-        public Tuple<Node, Node> nodes { get; private set; }
+        public Tuple<ExNode, ExNode> nodes { get; private set; }
         public float weight { get; private set; }
         public bool blocked { get; private set; } 
 
-        public Edge(Node node1, Node node2, float weight)
+        public Edge(ExNode node1, ExNode node2, float weight)
         {
-            this.nodes = new Tuple<Node, Node>(node1, node2);
+            this.nodes = new Tuple<ExNode, ExNode>(node1, node2);
             this.weight = weight;
         }
     }
 
-    public class Matrix
+    public class ExMatrix
     {
-        public Node[,] nodes;
+        public ExNode[,] nodes;
 
-        public Matrix(int numOfRows, int numOfCols)
+        public ExMatrix(int numOfRows, int numOfCols)
         {
-            this.nodes = new Node[numOfRows + 2, numOfCols + 2];
+            this.nodes = new ExNode[numOfRows + 2, numOfCols + 2];
         }
-
-        public void addNode(Node node)
+            
+        public void addNode(ExNode node)
         {
             this.nodes[node.y, node.x] = node;
         }
 
-        public Node getNode(int x, int y)
+        public ExNode getNode(int x, int y)
         {
             return this.nodes[y, x];
         }
 
-        public static Matrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
+        public static ExMatrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
-            Matrix matrix = new Matrix(area.Height, area.Width);
+            ExMatrix matrix = new ExMatrix(area.Height, area.Width);
 
             int rectangleX = (int)rI.X;
             int rectangleY = (int)rI.Y;
@@ -80,7 +80,7 @@ namespace GeometryFriendsAgents
             {
                 for(int y = rectangleY - 10; y < rectangleY + 10; y++)
                 {
-                    matrix.addNode(new Node(Node.Type.Rectangle, x, y));
+                    matrix.addNode(new ExNode(ExNode.Type.Rectangle, x, y));
                 }
             }
             
