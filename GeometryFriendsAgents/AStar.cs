@@ -161,7 +161,7 @@ namespace GeometryFriendsAgents
     }
 
     public class Matrix
-    {
+    { 
         public Node[,] nodes;
 
         public int getHeight()
@@ -199,14 +199,42 @@ namespace GeometryFriendsAgents
             int rectangleY = (int)rI.Y;
             int rectangleWidth = (int)rI.Height; // TODO: calculate width from height
 
-            for (int x = rectangleX - 10; x < rectangleX + 10; x++)
+            int circleX = (int)cI.X;
+            int circleY = (int)cI.Y;
+            int circleRadius = (int)cI.Radius;
+
+            // RECTANGLE
+            for (int x = rectangleX - rectangleWidth/2; x < rectangleX + rectangleWidth/2; x++)
             {
-                for (int y = rectangleY - 10; y < rectangleY + 10; y++)
+                for (int y = rectangleY - rectangleWidth/2; y < rectangleY + rectangleWidth/2; y++)
                 {
                     matrix.addNode(new Node(x, y, Node.Type.Rectangle, objective));
                 }
             }
 
+            // CIRCLE -- let's pretende the circle is a square for now
+            for (int x = circleX - circleRadius/2; x < circleX + circleRadius/2; x++)
+            {
+                for (int y = circleY - circleRadius/2; y < circleY + circleRadius/2; y++)
+                {
+                    matrix.addNode(new Node(x, y, Node.Type.Circle, objective));
+                }
+            }
+
+            // OBSTACLE
+            for(int i = 0; i < oI.Length; i++)
+            {
+                ObstacleRepresentation obstacle = oI[i];
+
+                for (int x = (int)(obstacle.X - obstacle.Width/2); x < (int)(obstacle.X + obstacle.Width/2); x++)
+                {
+                    for (int y = (int)(obstacle.Y - obstacle.Height / 2); y < (int)(obstacle.Y + obstacle.Height / 2); y++)
+                    {
+                        matrix.addNode(new Node(x, y, Node.Type.Obstacle, objective));
+                    }
+                }
+            }
+            
             return matrix;
         }
 
