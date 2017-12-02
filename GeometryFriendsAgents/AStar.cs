@@ -32,11 +32,11 @@ namespace GeometryFriendsAgents
             /// </summary>
             Obstacle,
             /// <summary>
-            /// Represents a circle only obstacle
+            /// Represents a platform which only the circle can go through
             /// </summary>
             CirclePlatform,
             /// <summary>
-            /// Represents a rectangle only obstacle
+            /// Represents a platform which only the rectangle can go through
             /// </summary>
             RectanglePlatform
         };
@@ -132,6 +132,32 @@ namespace GeometryFriendsAgents
         {
             return string.Format("Node[X: {0}, Y: {1}, State: {2}, Type: {3}]", this.location.X, this.location.Y, this.state, this.type);
         }
+
+        public Boolean isWalkable(AgentType agentType)
+        {
+            if (agentType == AgentType.Circle)
+            {
+                switch (this.type)
+                {
+                    case Type.Obstacle:
+                    case Type.RectanglePlatform:
+                        return false;
+                    default:
+                        return true;
+                }
+            }
+            else
+            {
+                switch (this.type)
+                {
+                    case Type.Obstacle:
+                    case Type.CirclePlatform:
+                        return false;
+                    default:
+                        return true;
+                }
+            }
+        }
     }
 
     public class Matrix
@@ -165,6 +191,8 @@ namespace GeometryFriendsAgents
 
         public static Matrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
+            Point objective = new Point((int)colI[0].X, (int)colI[0].Y));
+
             Matrix matrix = new Matrix(area.Height, area.Width);
 
             int rectangleX = (int)rI.X;
@@ -175,7 +203,7 @@ namespace GeometryFriendsAgents
             {
                 for (int y = rectangleY - 10; y < rectangleY + 10; y++)
                 {
-                    matrix.addNode(new Node(x, y, Node.Type.Rectangle, new Point((int)colI[0].X, (int)colI[0].Y)));
+                    matrix.addNode(new Node(x, y, Node.Type.Rectangle, objective));
                 }
             }
 
@@ -210,17 +238,20 @@ public class PathFinder
     private Node endNode;
     private SearchParameters searchParameters;
 
+    public AgentType agentType;
+
     /// <summary>
     /// Create a new instance of PathFinder
     /// </summary>
     /// <param name="searchParameters"></param>
-    public PathFinder(SearchParameters searchParameters)
+    public PathFinder(SearchParameters searchParameters, AgentType agentType)
     {
         this.searchParameters = searchParameters;
         InitializeNodes(searchParameters.matrix);
         this.startNode = this.matrix.nodes[searchParameters.StartLocation.X, searchParameters.StartLocation.Y];
         this.startNode.state = Node.State.Open;
         this.endNode = this.matrix.nodes[searchParameters.EndLocation.X, searchParameters.EndLocation.Y];
+        this.agentType = agentType;
     }
 
     /// <summary>
@@ -318,9 +349,8 @@ public class PathFinder
 
             Node node = this.matrix.nodes[x, y];
             // Ignore non-walkable nodes
-            // TODO: SOLVE THIS
-            /*if (!node.IsWalkable)
-                continue;*/
+            if(!node.isWalkable(this.agentType))
+                continue;
 
             // Ignore already-closed nodes
             if (node.state == Node.State.Closed)
