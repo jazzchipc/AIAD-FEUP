@@ -200,11 +200,14 @@ namespace GeometryFriendsAgents
             }
             else
             {
-                currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
+                //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
+                currentAction = this.JumpOnto(this.obstaclesInfo[0]);
             }
 
             //send a message to the rectangle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
+            Log.LogInformation(this.circleInfo.ToString());
+            Log.LogInformation(this.obstaclesInfo[0].ToString());
         }
 
         //implements abstract circle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
@@ -461,39 +464,149 @@ namespace GeometryFriendsAgents
         private Moves Roll(Utils.Direction direction, Utils.Quantifier speed)
         {
             Moves move = Moves.NO_ACTION;
+
+            Utils.Quantifier Moving_In_Pretended_Direction;
+            Moves Roll_Pretended_Direction, Roll_Oposite_Direction;
+
+            //Define directions
+            if(direction == Utils.Direction.RIGHT)
+            {
+                Moving_In_Pretended_Direction = this.agentStatus.MOVING_RIGHT;
+                Roll_Pretended_Direction = Moves.ROLL_RIGHT;
+                Roll_Oposite_Direction = Moves.ROLL_LEFT;
+            }
+            else
+            {
+                Moving_In_Pretended_Direction = this.agentStatus.MOVING_LEFT;
+                Roll_Pretended_Direction = Moves.ROLL_LEFT;
+                Roll_Oposite_Direction = Moves.ROLL_RIGHT;
+            }
+
+            //Decide action
             if(this.predictor != null)
             {
-                if(direction == Utils.Direction.RIGHT)
+                if (Moving_In_Pretended_Direction == speed + 1) //If Agent is moving with a little bit excessive speed
                 {
-                    if (this.agentStatus.MOVING_RIGHT == speed)
-                    {
-                        move = Moves.NO_ACTION;
-                    }
-                    else if (this.agentStatus.MOVING_RIGHT < speed) //When the agent is moving with not enough speed
+                    Log.LogInformation("SPEED: Good enough - " + Enum.GetName(typeof(Utils.Quantifier), Moving_In_Pretended_Direction).ToString());
+                    move = Moves.NO_ACTION;
+                }
+                else if (Moving_In_Pretended_Direction <= speed) //When the agent is moving with not enough speed
+                {
+                    Log.LogInformation("SPEED: Still not enough - " + Enum.GetName(typeof(Utils.Quantifier), Moving_In_Pretended_Direction).ToString());
+                    move = Roll_Pretended_Direction;
+                }
+                else //When the agent is moving with too much speed and needs to brake (> speed + 1)
+                {
+                    Log.LogInformation("SPEED: Too much! Rolling backwards - " + Enum.GetName(typeof(Utils.Quantifier), Moving_In_Pretended_Direction).ToString());
+                    move = Roll_Oposite_Direction;
+                }               
+            }
+
+            return move;
+        }
+
+        //TODO If near Obstacle, but still below, doesnt jump
+        private Moves JumpOnto(ObstacleRepresentation obstacle)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            Status statusCircle = new Status();
+            statusCircle.Update(this.circleInfo, this.rectangleInfo, obstacle, AgentType.Circle);
+
+            if(statusCircle.MOVING_TOWARDS_TARGET == Utils.Quantifier.NONE) //When circle is not moving towards the target
+            {
+                if(statusCircle.NEAR_TARGET)
+                {
+                    move = Moves.NO_ACTION;
+                }
+                else //Circle has to start moving the other way
+                {
+                    if(statusCircle.LEFT_FROM_TARGET != Utils.Quantifier.NONE) //Turns around and starts moving to the right
                     {
                         move = Moves.ROLL_RIGHT;
                     }
-                    else //When the agent is moving with excessive speed
+                    else if(statusCircle.RIGHT_FROM_TARGET != Utils.Quantifier.NONE) //Turns around and starts moving to the left
                     {
                         move = Moves.ROLL_LEFT;
                     }
+                    else //Is directly above/below the platform, but with another platform between
+                    {
+                        //TODO RESOLVE ACTION TO DO IN THIS SITUATION
+                        move = Moves.NO_ACTION;
+                    }
                 }
-                else if(direction == Utils.Direction.LEFT)
+            }
+            else //When the circle is moving towards the target
+            {
+                if(statusCircle.MOVING_RIGHT != Utils.Quantifier.NONE) //If moving Right
                 {
-                    if(this.agentStatus.MOVING_LEFT == speed)
+                    if(statusCircle.LEFT_FROM_TARGET == Utils.Quantifier.SLIGHTLY) //Jumps when almost there
+                    {
+                        move = Moves.JUMP;
+                    }
+                    else if(statusCircle.LEFT_FROM_TARGET > Utils.Quantifier.SLIGHTLY)
+                    {
+                        move = Roll(Utils.Direction.RIGHT, Utils.Quantifier.A_BIT);
+                    }
+                    else
                     {
                         move = Moves.NO_ACTION;
                     }
-                    else if(this.agentStatus.MOVING_LEFT < speed) //When the agent is moving with not enough speed
+                }
+                else if(statusCircle.MOVING_LEFT != Utils.Quantifier.NONE) //If moving Left
+                {
+                    if (statusCircle.RIGHT_FROM_TARGET == Utils.Quantifier.SLIGHTLY) //Jumps when almost there
                     {
-                        move = Moves.ROLL_LEFT;
+                        move = Moves.JUMP;
                     }
-                    else //When the agent is moving with excessive speed
+                    else if (statusCircle.RIGHT_FROM_TARGET > Utils.Quantifier.SLIGHTLY)
                     {
-                        move = Moves.ROLL_RIGHT;
+                        move = Roll(Utils.Direction.LEFT, Utils.Quantifier.A_BIT);
+                    }
+                    else
+                    {
+                        move = Moves.NO_ACTION;
                     }
                 }
-                
+            }
+
+            Log.LogInformation(statusCircle.ToString());
+            Log.LogInformation(move.ToString());
+            return move;
+        }
+
+        //TODO
+        private Moves CircleJumpOntoRectangle_REMASTER()
+        {
+            Moves move = Moves.NO_ACTION;
+
+            if(this.predictor != null)
+            {
+                ActionSimulator sim = predictor;
+                sim.Update(1);
+
+                //Representation of the future status
+                Status futureStatus = new Status();
+                CircleRepresentation futureCircle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
+                    sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
+                RectangleRepresentation futureRectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
+                    sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
+
+
+                CircleRepresentation[] circles = new CircleRepresentation[] { futureCircle, new CircleRepresentation() };
+                RectangleRepresentation[] rectangles = new RectangleRepresentation[] { futureRectangle, new RectangleRepresentation() };
+                futureStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle); //TODO Change to actual collectible being caught
+
+
+                //TODO
+                if(this.agentStatus.RIGHT_FROM_OTHER_AGENT != Utils.Quantifier.NONE)
+                {
+                    
+                }
+                else if(this.agentStatus.LEFT_FROM_OTHER_AGENT != Utils.Quantifier.NONE)
+                {
+
+                }
             }
 
             return move;

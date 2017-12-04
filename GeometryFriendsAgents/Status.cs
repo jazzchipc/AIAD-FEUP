@@ -13,6 +13,7 @@ namespace GeometryFriendsAgents
         private Quantifier Right_From_Target;
         private Quantifier Above_Target;
         private Quantifier Below_Target;
+        private bool Near_Target;
 
         private bool With_Obstacle_Between; //TODO
 
@@ -27,11 +28,13 @@ namespace GeometryFriendsAgents
 
         private Quantifier Moving_Right;
         private Quantifier Moving_Left;
+        private Quantifier Moving_Towards_Target;
 
         private bool Blocked; //TODO When Agent is MOVING but his position doesn't change
         //TODO Implement Status Moving Fast, and Moving Slow OR Moving Direction
 
-        private float margin = 10;
+        private float obstacle_margin_X = 10;
+        private float obstacle_margin_Y = 10;
         private float circle_radius;
         private float rectangle_height;
 
@@ -39,9 +42,9 @@ namespace GeometryFriendsAgents
         private float a_bit_distance = 50;
 
         //TODO CHANGE THE SPEEDS
-        private float a_lot_speed = 180;
-        private float a_bit_speed = 100;
-        private float slight_speed = 40;
+        private float a_lot_speed = 100;
+        private float a_bit_speed = 40;
+        private float slight_speed = 5;
         //TODO Implement a velocity margin
 
 
@@ -65,6 +68,8 @@ namespace GeometryFriendsAgents
         public bool OTHER_AGENT_MOVING { get => Other_Agent_Moving; set => Other_Agent_Moving = value; }
         public Quantifier MOVING_RIGHT { get => Moving_Right; set => Moving_Right = value; }
         public Quantifier MOVING_LEFT { get => Moving_Left; set => Moving_Left = value; }
+        public Quantifier MOVING_TOWARDS_TARGET { get => Moving_Towards_Target; set => Moving_Towards_Target = value; }
+        public bool NEAR_TARGET { get => Near_Target; set => Near_Target = value; }
 
         //This function only cares for the current Agent
         /*
@@ -98,26 +103,57 @@ namespace GeometryFriendsAgents
 
             this.circle_radius = actualCircle.Radius;
             this.rectangle_height = actualRectangle.Height;
+            Log.LogInformation("UPDATE Diamond");
             if (thisAgent == AgentType.Circle)
             {
                 compareAgentWithTarget(actualCircle.X, actualCircle.Y, diamondToCatch.X, diamondToCatch.Y);
                 compareAgents(actualCircle.X, actualCircle.Y, actualRectangle.X, actualRectangle.Y);
                 checkMovement(actualCircle.VelocityX, actualCircle.VelocityY, actualRectangle.VelocityX, actualRectangle.VelocityY);
+                checkMovementRelativeToTarget(actualCircle.X, actualCircle.VelocityX, diamondToCatch.X);
             }
             else
             {
                 compareAgentWithTarget(actualRectangle.X, actualRectangle.Y, diamondToCatch.X, diamondToCatch.Y);
                 compareAgents(actualRectangle.X, actualRectangle.Y, actualCircle.X, actualCircle.Y);
                 checkMovement(actualRectangle.VelocityX, actualRectangle.VelocityY, actualCircle.VelocityX, actualCircle.VelocityY);
+                checkMovementRelativeToTarget(actualRectangle.X, actualRectangle.VelocityX, diamondToCatch.X);
+            }
+        }
+
+        public void Update(CircleRepresentation circle, RectangleRepresentation rectangle, ObstacleRepresentation obstacle, AgentType thisAgent)
+        {
+            this.obstacle_margin_X = obstacle.Width / 2;
+            this.obstacle_margin_Y = obstacle.Height / 2;
+            this.circle_radius = circle.Radius;
+            this.rectangle_height = rectangle.Height;
+
+            Log.LogInformation("UPDATE Obstacle");
+            if(thisAgent == AgentType.Circle)
+            {
+                compareAgentWithTarget(circle.X, circle.Y, obstacle.X, obstacle.Y);
+                compareAgents(circle.X, circle.Y, rectangle.X, rectangle.Y);
+                checkMovement(circle.VelocityX, circle.VelocityY, rectangle.VelocityX, rectangle.VelocityY);
+                checkMovementRelativeToTarget(circle.X, circle.VelocityX, obstacle.X);
+            }
+            else
+            {
+                compareAgentWithTarget(rectangle.X, rectangle.Y, obstacle.X, obstacle.Y);
+                compareAgents(rectangle.X, rectangle.Y, circle.X, circle.Y);
+                checkMovement(rectangle.VelocityX, rectangle.VelocityY, circle.VelocityX, circle.VelocityY);
+                checkMovementRelativeToTarget(rectangle.X, rectangle.VelocityX, obstacle.X);
             }
         }
 
         private void compareAgentWithTarget(float agentXposition, float agentYposition, float targetXposition, float targetYposition)
         {
-            float targetRightBound = targetXposition + margin;
-            float targetLeftBound = targetXposition - margin;
-            float targetUpperBound = targetYposition - margin; //Because Y is inverted
-            float targetLowerBound = targetYposition + margin; 
+            float targetRightBound = targetXposition + obstacle_margin_X;
+            float targetLeftBound = targetXposition - obstacle_margin_X;
+            float targetUpperBound = targetYposition - obstacle_margin_Y; //Because Y is inverted
+            float targetLowerBound = targetYposition + obstacle_margin_Y;
+
+            Log.LogInformation("Target Left Bound: " + targetLeftBound.ToString());
+            Log.LogInformation("Target Left Bound - Lot Distance: " + (targetLeftBound - a_lot_distance).ToString());
+            Log.LogInformation("AgentX Position: " + agentXposition.ToString());
             //X Axis
             //Agent is right from the target diamond
             if (agentXposition > targetRightBound)
@@ -218,6 +254,8 @@ namespace GeometryFriendsAgents
                 this.ABOVE_TARGET = Quantifier.NONE;
                 this.BELOW_TARGET = Quantifier.NONE;
             }
+
+            this.NEAR_TARGET = checkNear(new Quantifier[4] {this.ABOVE_TARGET, this.BELOW_TARGET, this.RIGHT_FROM_TARGET, this.LEFT_FROM_TARGET });
         }
 
         private void compareAgents(float agent1Xposition, float agent1Yposition, float agent2Xposition, float agent2Yposition)
@@ -317,15 +355,7 @@ namespace GeometryFriendsAgents
                 this.BELOW_OTHER_AGENT = Quantifier.NONE;
             }
 
-            if(checkNear(new Quantifier[4] { this.ABOVE_OTHER_AGENT, this.BELOW_OTHER_AGENT, this.RIGHT_FROM_OTHER_AGENT, this.LEFT_FROM_OTHER_AGENT}))
-            {
-                this.NEAR_OTHER_AGENT = true;
-            }
-            else
-            {
-                this.NEAR_OTHER_AGENT = false;
-            }
-        }
+            this.NEAR_OTHER_AGENT = checkNear(new Quantifier[4] { this.ABOVE_OTHER_AGENT, this.BELOW_OTHER_AGENT, this.RIGHT_FROM_OTHER_AGENT, this.LEFT_FROM_OTHER_AGENT });        }
 
         private void checkMovement(float agent1Xvel, float agent1Yvel, float agent2Xvel, float agent2Yvel)
         {
@@ -388,12 +418,63 @@ namespace GeometryFriendsAgents
             }
         }
 
+
+        public void checkMovementRelativeToTarget(float agentPosX, float agentVelX, float targetPosX)
+        {
+            float targetRightBound = targetPosX + obstacle_margin_X;
+            float targetLeftBound = targetPosX - obstacle_margin_X;
+
+            if (agentPosX > targetRightBound)
+            {
+                if(agentVelX < -a_lot_speed)
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.A_LOT;
+                }
+                else if(agentVelX < -a_bit_speed)
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.A_BIT;
+                }
+                else if(agentVelX < -slight_speed)
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.SLIGHTLY;
+                }
+                else
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.NONE;
+                }
+            }
+            else if(agentPosX < targetLeftBound)
+            {
+                if(agentVelX > a_lot_speed)
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.A_LOT;
+                }
+                else if(agentVelX > a_bit_speed)
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.A_BIT;
+                }
+                else if(agentVelX > slight_speed)
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.SLIGHTLY;
+                }
+                else
+                {
+                    this.MOVING_TOWARDS_TARGET = Quantifier.NONE;
+                }
+            }
+            else
+            {
+                this.MOVING_TOWARDS_TARGET = Quantifier.NONE;
+            }
+        }
+
         public override string ToString()
         {
             return "LEFT FROM TARGET: " + Left_From_Target.ToString() + " | "
                 + "RIGHT FROM TARGET: " + Right_From_Target.ToString() + " | "
                 + "ABOVE TARGET: " + Above_Target.ToString() + " | "
                 + "BELOW TARGET: " + Below_Target.ToString() + " | "
+                + "NEAR_TARGET: " + Near_Target.ToString() +  " | "
                 + "WITH OBSTACLE BETWEEN: " + With_Obstacle_Between.ToString() + " | "
                 + "ABOVE OTHER AGENT: " + Above_Other_Agent.ToString() + " | "
                 + "BELOW OTHER AGENT: " + Below_Other_Agent.ToString() + " | "
@@ -401,7 +482,12 @@ namespace GeometryFriendsAgents
                 + "LEFT FROM OTHER AGENT: " + Left_From_Other_Agent.ToString() + " | "
                 + "NEAR OTHER AGENT: " + Near_Other_Agent.ToString() + " | "
                 + "CIRCLE_RADIUS: " + circle_radius.ToString() + " | "
-                + "RECTANGLE_HEIGHT: " + rectangle_height.ToString();
+                + "RECTANGLE_HEIGHT: " + rectangle_height.ToString() + " | "
+                + "OBSTACLE_MARGIN_X: " + obstacle_margin_X.ToString() + " | "
+                + "OBSTACLE_MARGIN_Y: " + obstacle_margin_Y.ToString() + " | "
+                + "MOVING LEFT: " + Moving_Left.ToString() + " | "
+                + "MOVING RIGHT: " + Moving_Right.ToString() + " | "
+                + "MOVING TOWARDS TARGET: " + Moving_Towards_Target.ToString(); 
         }
 
         //Number of flags should be 4 (Above, Below, Right, Left)
@@ -427,7 +513,7 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                if(slightly_count == 1 && none_count == 3) //To be near, 1 flag should be SLIGHTLY and the other 3 NONE
+                if((slightly_count == 1 && none_count == 3) || (slightly_count == 2 && none_count == 2)) //To be near, 1 flag should be SLIGHTLY and the other 3 NONE
                 {
                     return true;
                 }
