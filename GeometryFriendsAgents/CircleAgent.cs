@@ -485,10 +485,12 @@ namespace GeometryFriendsAgents
             //Decide action
             if(this.predictor != null)
             {
+                //TODO Remove this first condition. This is the same as Else condition
                 if (Moving_In_Pretended_Direction == speed + 1) //If Agent is moving with a little bit excessive speed
                 {
                     Log.LogInformation("SPEED: Good enough - " + Enum.GetName(typeof(Utils.Quantifier), Moving_In_Pretended_Direction).ToString());
-                    move = Moves.NO_ACTION;
+                    //move = Moves.NO_ACTION;
+                    move = Roll_Oposite_Direction;
                 }
                 else if (Moving_In_Pretended_Direction <= speed) //When the agent is moving with not enough speed
                 {
@@ -544,9 +546,13 @@ namespace GeometryFriendsAgents
                     {
                         move = Moves.JUMP;
                     }
-                    else if(statusCircle.LEFT_FROM_TARGET > Utils.Quantifier.SLIGHTLY)
+                    else if(statusCircle.LEFT_FROM_TARGET > Utils.Quantifier.A_BIT) //If far away, rolls faster
                     {
                         move = Roll(Utils.Direction.RIGHT, Utils.Quantifier.A_BIT);
+                    }
+                    else if(statusCircle.LEFT_FROM_TARGET > Utils.Quantifier.SLIGHTLY) //If almost there, rolls slower
+                    {
+                        move = Roll(Utils.Direction.RIGHT, Utils.Quantifier.SLIGHTLY);
                     }
                     else
                     {
@@ -559,9 +565,13 @@ namespace GeometryFriendsAgents
                     {
                         move = Moves.JUMP;
                     }
-                    else if (statusCircle.RIGHT_FROM_TARGET > Utils.Quantifier.SLIGHTLY)
+                    else if(statusCircle.RIGHT_FROM_TARGET > Utils.Quantifier.A_BIT)//If far away, rolls faster
                     {
                         move = Roll(Utils.Direction.LEFT, Utils.Quantifier.A_BIT);
+                    }
+                    else if (statusCircle.RIGHT_FROM_TARGET > Utils.Quantifier.SLIGHTLY) //If almost there, rolls slower
+                    {
+                        move = Roll(Utils.Direction.LEFT, Utils.Quantifier.SLIGHTLY);
                     }
                     else
                     {

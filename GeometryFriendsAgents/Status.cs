@@ -9,6 +9,8 @@ namespace GeometryFriendsAgents
     //Each Agent will have a state machine, which functions according to the next diamond to catch
     public class Status
     {
+        private AgentType agentType;
+        
         private Quantifier Left_From_Target;
         private Quantifier Right_From_Target;
         private Quantifier Above_Target;
@@ -94,7 +96,7 @@ namespace GeometryFriendsAgents
         //This function takes into account also the future representation of the agent
         public void Update(CircleRepresentation[] circles, RectangleRepresentation[] rectangles, CollectibleRepresentation diamondToCatch, AgentType thisAgent)
         {
-            
+            this.agentType = thisAgent;
             CircleRepresentation actualCircle = circles[0];
             CircleRepresentation futureCircle = circles[1];
             RectangleRepresentation actualRectangle = rectangles[0];
@@ -122,6 +124,7 @@ namespace GeometryFriendsAgents
 
         public void Update(CircleRepresentation circle, RectangleRepresentation rectangle, ObstacleRepresentation obstacle, AgentType thisAgent)
         {
+            this.agentType = thisAgent;
             this.obstacle_margin_X = obstacle.Width / 2;
             this.obstacle_margin_Y = obstacle.Height / 2;
             this.circle_radius = circle.Radius;
@@ -151,20 +154,42 @@ namespace GeometryFriendsAgents
             float targetUpperBound = targetYposition - obstacle_margin_Y; //Because Y is inverted
             float targetLowerBound = targetYposition + obstacle_margin_Y;
 
+            float agentRightBound;
+            float agentLeftBound;
+            float agentUpperBound;
+            float agentLowerBound;
+
+            if(this.agentType == AgentType.Circle)
+            {
+                agentRightBound = agentXposition + circle_radius;
+                agentLeftBound = agentXposition - circle_radius;
+                agentUpperBound = agentYposition - circle_radius; //Because Y is inverted
+                agentLowerBound = agentYposition + circle_radius;
+            }
+            else
+            {
+                agentRightBound = agentXposition + getRectangleWidth(rectangle_height)/2;
+                agentLeftBound = agentXposition - getRectangleWidth(rectangle_height) / 2;
+                agentUpperBound = agentYposition - rectangle_height/2; //Because Y is inverted
+                agentLowerBound = agentYposition + rectangle_height/2;
+            }
+
+
+
             Log.LogInformation("Target Left Bound: " + targetLeftBound.ToString());
             Log.LogInformation("Target Left Bound - Lot Distance: " + (targetLeftBound - a_lot_distance).ToString());
             Log.LogInformation("AgentX Position: " + agentXposition.ToString());
             //X Axis
             //Agent is right from the target diamond
-            if (agentXposition > targetRightBound)
+            if (agentLeftBound > targetRightBound)
             {
                 //a lot
-                if(agentXposition > targetRightBound + a_lot_distance)
+                if(agentLeftBound > targetRightBound + a_lot_distance)
                 {
                     this.RIGHT_FROM_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentXposition > targetRightBound + a_bit_distance)
+                else if(agentLeftBound > targetRightBound + a_bit_distance)
                 {
                     this.RIGHT_FROM_TARGET = Quantifier.A_BIT;
                 }
@@ -177,15 +202,15 @@ namespace GeometryFriendsAgents
                 this.LEFT_FROM_TARGET = Quantifier.NONE;
             }
             //Agent is left from the target diamond
-            else if (agentXposition < targetLeftBound)
+            else if (agentRightBound < targetLeftBound)
             {
                 //a lot
-                if(agentXposition < targetLeftBound - a_lot_distance)
+                if(agentRightBound < targetLeftBound - a_lot_distance)
                 {
                     this.LEFT_FROM_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentXposition < targetLeftBound - a_bit_distance)
+                else if(agentRightBound < targetLeftBound - a_bit_distance)
                 {
                     this.LEFT_FROM_TARGET = Quantifier.A_BIT;
                 }
@@ -207,15 +232,15 @@ namespace GeometryFriendsAgents
 
             //Y Axis (inverted)
             //Agent is above the target diamond
-            if (agentYposition < targetUpperBound)
+            if (agentLowerBound < targetUpperBound)
             {
                 //a lot
-                if(agentYposition < targetUpperBound - a_lot_distance)
+                if(agentLowerBound < targetUpperBound - a_lot_distance)
                 {
                     this.ABOVE_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentYposition < targetUpperBound - a_bit_distance)
+                else if(agentLowerBound < targetUpperBound - a_bit_distance)
                 {
                     this.ABOVE_TARGET = Quantifier.A_BIT;
                 }
@@ -228,15 +253,15 @@ namespace GeometryFriendsAgents
                 this.BELOW_TARGET = Quantifier.NONE;
             }
             //Agent is below the target diamond
-            else if (agentYposition > targetLowerBound)
+            else if (agentUpperBound > targetLowerBound)
             {
                 //a lot
-                if(agentYposition > targetLowerBound + a_lot_distance)
+                if(agentUpperBound > targetLowerBound + a_lot_distance)
                 {
                     this.BELOW_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentYposition > targetLowerBound + a_bit_distance)
+                else if(agentUpperBound > targetLowerBound + a_bit_distance)
                 {
                     this.BELOW_TARGET = Quantifier.A_BIT;
                 }
