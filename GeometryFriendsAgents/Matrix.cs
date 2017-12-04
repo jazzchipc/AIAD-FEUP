@@ -1,94 +1,97 @@
-using System.Collections.Generic;
-using System;
-using GeometryFriendsAgents;
 using GeometryFriends.AI.Perceptions.Information;
 using System.Drawing;
 
 namespace GeometryFriendsAgents
 {
-    public class ExNode
+    public class Matrix
     {
-        public enum Type { Space, Circle, Rectangle, Diamond, Obstacle, CirclePlatform, RectanglePlatform};
+        public Node[,] nodes;
 
-        public Type type {  get; protected set;  }
-        public int x { get; protected set; }
-        public int y { get; protected set; }
+        public Point objective { get; private set; }
 
-        public List<Edge> adj { get; protected set; }
-
-        public ExNode(Type type, int x, int y)
+        public int getHeight()
         {
-            this.adj = new List<Edge>();
-            this.type = type;
-            this.x = x;
-            this.y = y;
+            return this.nodes.Length;
         }
 
-        public void addEdge(Edge edge)
+        public int getWidth()
         {
-            this.adj.Add(edge);
+            return this.nodes.GetLength(0);
         }
 
-        public void clearAllEdges()
+        public Matrix(int numOfRows, int numOfCols, Point objective)
         {
-            this.adj.Clear();
+            this.objective = objective;
+
+            this.nodes = new Node[numOfRows + 3, numOfCols + 3];
+
+            for(int i = 0; i < this.nodes.GetLength(0); i++)
+            {
+                for(int j = 0; j < this.nodes.GetLength(1); j++)
+                {
+                    this.nodes[i, j] = new Node(i, j, Node.Type.Space, objective);
+                }
+            }
         }
 
-    }
-
-    public class Edge
-    {
-        public Tuple<ExNode, ExNode> nodes { get; private set; }
-        public float weight { get; private set; }
-        public bool blocked { get; private set; } 
-
-        public Edge(ExNode node1, ExNode node2, float weight)
+        public void addNode(Node node)
         {
-            this.nodes = new Tuple<ExNode, ExNode>(node1, node2);
-            this.weight = weight;
-        }
-    }
-
-    public class ExMatrix
-    {
-        public ExNode[,] nodes;
-
-        public ExMatrix(int numOfRows, int numOfCols)
-        {
-            this.nodes = new ExNode[numOfRows + 2, numOfCols + 2];
-        }
-            
-        public void addNode(ExNode node)
-        {
-            this.nodes[node.y, node.x] = node;
+            this.nodes[node.location.X, node.location.Y] = node;
         }
 
-        public ExNode getNode(int x, int y)
+        public Node getNode(int x, int y)
         {
             return this.nodes[y, x];
         }
 
-        public static ExMatrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
+        public static Matrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
-            ExMatrix matrix = new ExMatrix(area.Height, area.Width);
+            Matrix matrix = new Matrix(area.Width, area.Height, new Point((int)colI[0].X, (int)colI[0].Y));
 
             int rectangleX = (int)rI.X;
             int rectangleY = (int)rI.Y;
             int rectangleWidth = (int)rI.Height; // TODO: calculate width from height
 
-            for(int x = rectangleX - 10; x < rectangleX + 10; x++)
+            int circleX = (int)cI.X;
+            int circleY = (int)cI.Y;
+            int circleRadius = (int)cI.Radius - 20;
+
+            // RECTANGLE
+            for (int x = rectangleX - rectangleWidth / 2; x < rectangleX + rectangleWidth / 2; x++)
             {
-                for(int y = rectangleY - 10; y < rectangleY + 10; y++)
+                for (int y = rectangleY - 10 / 2; y < rectangleY + 10 / 2; y++)
                 {
-                    matrix.addNode(new ExNode(ExNode.Type.Rectangle, x, y));
+                    matrix.getNode(x, y).type = Node.Type.Rectangle;
                 }
             }
-            
+
+            // CIRCLE -- let's pretende the circle is a square for now
+            for (int x = circleX - circleRadius / 2; x < circleX + circleRadius / 2; x++)
+            {
+                for (int y = circleY - circleRadius / 2; y < circleY + circleRadius / 2; y++)
+                {
+                    matrix.getNode(x, y).type = Node.Type.Circle;
+                }
+            }
+
+            // OBSTACLE
+            for (int i = 0; i < oI.Length; i++)
+            {
+                ObstacleRepresentation obstacle = oI[i];
+
+                for (int x = (int)(obstacle.X - obstacle.Width / 2); x < (int)(obstacle.X + obstacle.Width / 2); x++)
+                {
+                    for (int y = (int)(obstacle.Y - obstacle.Height / 2); y < (int)(obstacle.Y + obstacle.Height / 2); y++)
+                    {
+                        matrix.getNode(x, y).type = Node.Type.Obstacle;
+                    }
+                }
+            }
+
             return matrix;
         }
 
     }
 
-    
 
 }

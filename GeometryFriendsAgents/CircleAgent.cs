@@ -58,13 +58,15 @@ namespace GeometryFriendsAgents
         int iterationCount = 0;
         int moveStep = 4;
 
-        ExMatrix matrix;
+        Matrix matrix;
 
         //Communication settings
         Queue<Request> requests;
 
         //Status tracking
         Status agentStatus;
+
+        List<Point> path;
 
         public CircleAgent()
         {
@@ -126,8 +128,15 @@ namespace GeometryFriendsAgents
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
             // create game matrix
-            this.matrix = ExMatrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
+            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
+            // Start with a clear map (don't add any obstacles)
+            SearchParameters searchParameters = new SearchParameters(new Point((int)cI.X, (int)cI.Y), matrix.objective, matrix);
+            PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle, this.matrix);
+            List<Point> path = pathFinder.FindPath();
+            this.path = path;
+            
+            
             DebugSensorsInfo();
         }
 
@@ -279,6 +288,8 @@ namespace GeometryFriendsAgents
                     newDebugInfo.Add(DebugInformationFactory.CreateClearDebugInfo());
                     //add all the simulator generated debug information about circle/rectangle predicted paths
                     newDebugInfo.AddRange(toSim.SimulationHistoryDebugInformation);
+
+                    newDebugInfo.Add(DebugInformationFactory.CreateLineDebugInfo(path[0], path[path.Count - 1], GeometryFriends.XNAStub.Color.Yellow));
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)
                     {
@@ -437,7 +448,7 @@ namespace GeometryFriendsAgents
                 if (futureStatus.NEAR_OTHER_AGENT)
                 {
                     move = Moves.JUMP;
-                }*/
+                }
 
                 
                 if(futureStatus.MOVING_RIGHT == Utils.Quantifier.A_BIT)
@@ -451,13 +462,13 @@ namespace GeometryFriendsAgents
                 else
                 {
                     move = Moves.ROLL_RIGHT;
-                }                
+                }              */  
 
             }
 
             return move;
         }
-
+        /*
         private Moves Roll(Utils.Direction direction, Utils.Quantifier speed)
         {
             Moves move = Moves.NO_ACTION;
@@ -498,7 +509,7 @@ namespace GeometryFriendsAgents
 
             return move;
         }
-
+        */
         public void SendRectangleToPosition(float x, float rectanglePredictedPositionX)
         {
 

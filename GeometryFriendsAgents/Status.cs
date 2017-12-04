@@ -67,7 +67,7 @@ namespace GeometryFriendsAgents
         public Quantifier MOVING_LEFT { get => Moving_Left; set => Moving_Left = value; }
 
         //This function only cares for the current Agent
-        /*
+        
         public void Update(CircleRepresentation actualCircle, RectangleRepresentation actualRectangle, CollectibleRepresentation diamondToCatch, AgentType thisAgent)
         {
             this.circle_radius = actualCircle.Radius;
@@ -84,7 +84,7 @@ namespace GeometryFriendsAgents
                 compareAgents(actualRectangle.X, actualRectangle.Y, actualCircle.X, actualCircle.Y);
                 checkMovement(actualRectangle.VelocityX, actualRectangle.VelocityY, actualCircle.VelocityX, actualCircle.VelocityY);
             }
-        }*/
+        }
 
         //This function takes into account also the future representation of the agent
         public void Update(CircleRepresentation[] circles, RectangleRepresentation[] rectangles, CollectibleRepresentation diamondToCatch, AgentType thisAgent)
@@ -95,7 +95,7 @@ namespace GeometryFriendsAgents
             RectangleRepresentation actualRectangle = rectangles[0];
             RectangleRepresentation futureRectangle = rectangles[1];
 
-
+            
             this.circle_radius = actualCircle.Radius;
             this.rectangle_height = actualRectangle.Height;
             if (thisAgent == AgentType.Circle)
@@ -111,7 +111,7 @@ namespace GeometryFriendsAgents
                 checkMovement(actualRectangle.VelocityX, actualRectangle.VelocityY, actualCircle.VelocityX, actualCircle.VelocityY);
             }
         }
-
+        
         private void compareAgentWithTarget(float agentXposition, float agentYposition, float targetXposition, float targetYposition)
         {
             float targetRightBound = targetXposition + margin;
