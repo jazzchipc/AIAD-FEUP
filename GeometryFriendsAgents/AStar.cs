@@ -1,79 +1,166 @@
+﻿using GeometryFriends.AI.Debug;
+using GeometryFriends.AI.Perceptions.Information;
+using GeometryFriendsAgents;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace GeometryFriendsAgents
 {
-    public class AStarNode : Node
-    {
+    // Using http://blog.two-cats.com/2014/06/a-star-example/ tutorial
 
-        public enum State
-        {
-            /// <summary>
-            /// The node has not yet been considered in any possible paths
-            /// </summary>
-            Untested,
-            /// <summary>
-            /// The node has been identified as a possible step in a path
-            /// </summary>
-            Open,
-            /// <summary>
-            /// The node has already been included in a path and will not be considered again
-            /// </summary>
-            Close
-        };
-
-        /// <summary>
-        /// Cost (length of the path) from the start node to this node 
-        /// </summary>
-        public float gCost { get; private set; }
-        /// <summary>
-        /// Cost (straight-lina distance) from this node to the end node
-        /// </summary>
-        public float hCost { get; private set; }
-        /// <summary>
-        /// An estimate of the total distance if taking the current route. It's calculated by summing gCost and hCost.
-        /// </summary>
-        public float fCost { get { return this.gCost + this.hCost; } }
-
-        /// <summary>
-        /// State of the node in the current search.
-        /// </summary>
-        public State nodeState { get; set; }
-
-        public AStarNode(Type type, int x, int y) : base(type, x, y)
-        {
-        }
-
-        public static float GetTraversalCost(Point location, Point otherLocation)
-        {
-            float deltaX = otherLocation.X - location.X;
-            float deltaY = otherLocation.Y - location.Y;
-            return (float)Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}, {1}: {2}", this.x, this.y, this.nodeState);
-        }
-
-    }
 
     /// <summary>
     /// Defines the parameters which will be used to find a path across a section of the map
     /// </summary>
     public class SearchParameters
     {
-        public Point StartLocation { get; set; }
+        public Node startNode { get; set; }
 
-        public Point EndLocation { get; set; }
+        public Node endNode { get; set; }
 
-        public bool[,] Map { get; set; }
+        public Graph graph;
 
-        public SearchParameters(Point startLocation, Point endLocation, bool[,] map)
+        public SearchParameters(Node startNode, Node goalNode, Graph graph)
         {
-            this.StartLocation = startLocation;
-            this.EndLocation = endLocation;
-            this.Map = map;
+            this.startNode = startNode;
+            this.endNode = endNode;
+            this.graph = graph;
         }
     }
+    public class PathFinder
+    {
+        private Graph graph;
+        private SearchParameters searchParameters;
+        public AgentType agentType;
+
+        List<Node> openSet;
+        List<Node> closedSet;
+
+        /// <summary>
+        /// Create a new instance of PathFinder
+        /// </summary>
+        /// <param name="searchParameters"></param>
+        public PathFinder(Graph graph, SearchParameters searchParameters, AgentType agentType)
+        {
+            this.graph = graph;
+            this.searchParameters = searchParameters;
+            this.agentType = agentType;
+        }
+
+        /// <summary>
+        /// Attempts to find a path from the start location to the end location based on the supplied SearchParameters
+        /// </summary>
+        /// <returns>A List of Points representing the path. If no path was found, the returned list is empty.</returns>
+        public List<Point> FindPath()
+        {
+            // The start node is the first entry in the 'open' list
+            List<Point> path = new List<Point>();
+            bool success = this.Search();
+            if (success)
+            {
+                // If a path was found, follow the parents from the end node to build a list of locations
+                Node node = this.searchParameters.endNode;
+                while (node.parentNode != null)
+                {
+                    path.Add(node.location);
+                    node = node.parentNode;
+                }
+
+                // Reverse the list so it's in the correct order when returned
+                path.Reverse();
+            }
+
+            return path;
+        }
+
+        /// <summary>
+        /// Attempts to find a path to the destination node using startNode as the starting location
+        /// </summary>
+        /// <returns>True if a path to the destination has been found, otherwise false</returns>
+        private bool Search()
+        {
+            this.openSet = new List<Node>();
+            this.closedSet = new List<Node>();
+
+            Node startNode = this.searchParameters.startNode;
+            Node endNode = this.searchParameters.endNode;
+
+            openSet.Add(startNode);
+
+            // distance from start node to itself is 0 
+            startNode.gCost = 0;  
+
+            // heuristic is distance in straight line. It is admissible, because it never overestimates the real cost.
+            startNode.hCost = Utils.GetTraversalCost(startNode.location, endNode.location); 
+            
+
+            while(openSet.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine("Open Set: " + openSet.Count + " nodes.");
+                System.Diagnostics.Debug.WriteLine("Closed Set: " + closedSet.Count + " nodes.");
+
+                // order openSet by fCost
+                openSet.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
+
+                // node with lowest fCost in open set
+                Node current = openSet[0]; 
+
+                // Check whether the end node has been reached
+                if (current.location == endNode.location)
+                {
+                    return true;
+                }
+
+                openSet.Remove(current);
+                closedSet.Add(current);
+
+                List<Node> nextNodes = this.graph.getAdjacentNodes(current.index);
+
+                // Sort by F-value so that the shortest possible routes are considered first
+                nextNodes.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
+                foreach (var nextNode in nextNodes)
+                {
+                    // Ignore already-closed nodes
+                    if (this.closedSet.Contains(nextNode))
+                    {
+                        continue;
+                    }
+
+                    // Check whether the end node has been reached
+                    if (!this.openSet.Contains(nextNode))
+                    {
+                        openSet.Add(nextNode);
+                    }
+
+ 
+                    float traversalCost = Utils.GetTraversalCost(current.location, nextNode.location);
+                    float tentativeGCost = nextNode.gCost + traversalCost;
+
+                    if (tentativeGCost < nextNode.gCost)
+                    {
+                        // This is the best path, so save it
+                        nextNode.parentNode = current;
+                        nextNode.gCost = tentativeGCost;
+                    }
+                }
+            }
+
+            // The method returns false if this path leads to be a dead end
+            return false;
+        }
+
+        /// <summary>
+        /// Displays the map and path as a simple grid to the game with a yellow line
+        /// </summary>
+        public static void ShowPath(List<DebugInformation> agentDebugList, List<Point> path)
+        {
+            for(int i = 0; i < path.Count - 1; i++)
+            {
+                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i], path[i+1], GeometryFriends.XNAStub.Color.Yellow));
+            }
+        }
+    }
+
 }
