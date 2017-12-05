@@ -49,6 +49,8 @@ namespace GeometryFriendsAgents
         private float slight_speed = 5;
         //TODO Implement a velocity margin
 
+        private float penetration_margin = 0.08F;
+
 
 
         public Status()
@@ -149,10 +151,10 @@ namespace GeometryFriendsAgents
 
         private void compareAgentWithTarget(float agentXposition, float agentYposition, float targetXposition, float targetYposition)
         {
-            float targetRightBound = targetXposition + obstacle_margin_X;
-            float targetLeftBound = targetXposition - obstacle_margin_X;
-            float targetUpperBound = targetYposition - obstacle_margin_Y; //Because Y is inverted
-            float targetLowerBound = targetYposition + obstacle_margin_Y;
+            float targetRightBound = targetXposition + obstacle_margin_X - penetration_margin;
+            float targetLeftBound = targetXposition - obstacle_margin_X + penetration_margin;
+            float targetUpperBound = targetYposition - obstacle_margin_Y + penetration_margin; //Because Y is inverted
+            float targetLowerBound = targetYposition + obstacle_margin_Y - penetration_margin;
 
             float agentRightBound;
             float agentLeftBound;
@@ -176,20 +178,19 @@ namespace GeometryFriendsAgents
 
 
 
-            Log.LogInformation("Target Left Bound: " + targetLeftBound.ToString());
-            Log.LogInformation("Target Left Bound - Lot Distance: " + (targetLeftBound - a_lot_distance).ToString());
-            Log.LogInformation("AgentX Position: " + agentXposition.ToString());
+            Log.LogInformation("Agent - " + "L:" + agentLeftBound + "|R:" + agentRightBound + "|U:" + agentUpperBound + "|L:" + agentLowerBound);
+            Log.LogInformation("Target - " + "L:" + targetLeftBound + "|R:" + targetRightBound + "|U:" + targetUpperBound + "|L:" + targetLowerBound);
             //X Axis
             //Agent is right from the target diamond
-            if (agentLeftBound > targetRightBound)
+            if (agentLeftBound >= targetRightBound)
             {
                 //a lot
-                if(agentLeftBound > targetRightBound + a_lot_distance)
+                if(agentLeftBound >= targetRightBound + a_lot_distance)
                 {
                     this.RIGHT_FROM_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentLeftBound > targetRightBound + a_bit_distance)
+                else if(agentLeftBound >= targetRightBound + a_bit_distance)
                 {
                     this.RIGHT_FROM_TARGET = Quantifier.A_BIT;
                 }
@@ -202,15 +203,15 @@ namespace GeometryFriendsAgents
                 this.LEFT_FROM_TARGET = Quantifier.NONE;
             }
             //Agent is left from the target diamond
-            else if (agentRightBound < targetLeftBound)
+            else if (agentRightBound <= targetLeftBound)
             {
                 //a lot
-                if(agentRightBound < targetLeftBound - a_lot_distance)
+                if(agentRightBound <= targetLeftBound - a_lot_distance)
                 {
                     this.LEFT_FROM_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentRightBound < targetLeftBound - a_bit_distance)
+                else if(agentRightBound <= targetLeftBound - a_bit_distance)
                 {
                     this.LEFT_FROM_TARGET = Quantifier.A_BIT;
                 }
@@ -232,15 +233,15 @@ namespace GeometryFriendsAgents
 
             //Y Axis (inverted)
             //Agent is above the target diamond
-            if (agentLowerBound < targetUpperBound)
+            if (agentLowerBound <= targetUpperBound)
             {
                 //a lot
-                if(agentLowerBound < targetUpperBound - a_lot_distance)
+                if(agentLowerBound <= targetUpperBound - a_lot_distance)
                 {
                     this.ABOVE_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentLowerBound < targetUpperBound - a_bit_distance)
+                else if(agentLowerBound <= targetUpperBound - a_bit_distance)
                 {
                     this.ABOVE_TARGET = Quantifier.A_BIT;
                 }
@@ -253,15 +254,15 @@ namespace GeometryFriendsAgents
                 this.BELOW_TARGET = Quantifier.NONE;
             }
             //Agent is below the target diamond
-            else if (agentUpperBound > targetLowerBound)
+            else if (agentUpperBound >= targetLowerBound)
             {
                 //a lot
-                if(agentUpperBound > targetLowerBound + a_lot_distance)
+                if(agentUpperBound >= targetLowerBound + a_lot_distance)
                 {
                     this.BELOW_TARGET = Quantifier.A_LOT;
                 }
                 //just a bit
-                else if(agentUpperBound > targetLowerBound + a_bit_distance)
+                else if(agentUpperBound >= targetLowerBound + a_bit_distance)
                 {
                     this.BELOW_TARGET = Quantifier.A_BIT;
                 }
@@ -280,7 +281,31 @@ namespace GeometryFriendsAgents
                 this.BELOW_TARGET = Quantifier.NONE;
             }
 
-            this.NEAR_TARGET = checkNear(new Quantifier[4] {this.ABOVE_TARGET, this.BELOW_TARGET, this.RIGHT_FROM_TARGET, this.LEFT_FROM_TARGET });
+            //Check Corners (using the agent centre)
+            if (this.ABOVE_TARGET == Quantifier.NONE &&
+                this.BELOW_TARGET == Quantifier.NONE &&
+                this.LEFT_FROM_TARGET == Quantifier.NONE &&
+                this.RIGHT_FROM_TARGET == Quantifier.NONE)
+            {
+                if (agentXposition <= targetLeftBound)
+                {
+                    this.LEFT_FROM_TARGET = Quantifier.SLIGHTLY;
+                }
+                if (agentXposition >= targetRightBound)
+                {
+                    this.RIGHT_FROM_TARGET = Quantifier.SLIGHTLY;
+                }
+                if (agentYposition <= targetUpperBound)
+                {
+                    this.ABOVE_TARGET = Quantifier.SLIGHTLY;
+                }
+                if (agentYposition >= targetLowerBound)
+                {
+                    this.BELOW_TARGET = Quantifier.SLIGHTLY;
+                }
+            }
+
+            this.NEAR_TARGET = checkNear(new Quantifier[4] { this.ABOVE_TARGET, this.BELOW_TARGET, this.RIGHT_FROM_TARGET, this.LEFT_FROM_TARGET });
         }
 
         private void compareAgents(float agent1Xposition, float agent1Yposition, float agent2Xposition, float agent2Yposition)

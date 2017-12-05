@@ -201,13 +201,13 @@ namespace GeometryFriendsAgents
             else
             {
                 //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
-                currentAction = this.JumpOnto(this.obstaclesInfo[0]);
+                currentAction = this.JumpOntoRectangle();
             }
 
             //send a message to the rectangle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
             Log.LogInformation(this.circleInfo.ToString());
-            Log.LogInformation(this.obstaclesInfo[0].ToString());
+            //Log.LogInformation(this.obstaclesInfo[0].ToString());
         }
 
         //implements abstract circle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
@@ -515,68 +515,76 @@ namespace GeometryFriendsAgents
             Status statusCircle = new Status();
             statusCircle.Update(this.circleInfo, this.rectangleInfo, obstacle, AgentType.Circle);
 
+            Utils.Quantifier Distance_From_Obstacle;
+            Moves Roll_To_Obstacle;
+            Moves Roll_Away_From_Obstacle;
+            Utils.Direction Direction_To_Get_To_Obstacle;
+
+            if(statusCircle.LEFT_FROM_TARGET == Utils.Quantifier.NONE) //Circle is on the obstacle's right side
+            {
+                Distance_From_Obstacle = statusCircle.RIGHT_FROM_TARGET;
+                Roll_To_Obstacle = Moves.ROLL_LEFT;
+                Roll_Away_From_Obstacle = Moves.ROLL_RIGHT;
+                Direction_To_Get_To_Obstacle = Utils.Direction.LEFT;
+            }
+            else if(statusCircle.RIGHT_FROM_TARGET == Utils.Quantifier.NONE)//Circle is on the obstacle's left side
+            {
+                Distance_From_Obstacle = statusCircle.LEFT_FROM_TARGET;
+                Roll_To_Obstacle = Moves.ROLL_RIGHT;
+                Roll_Away_From_Obstacle = Moves.ROLL_LEFT;
+                Direction_To_Get_To_Obstacle = Utils.Direction.RIGHT;
+            }
+            else //Circle is vertically aligned with obstacle
+            {
+                Distance_From_Obstacle = Utils.Quantifier.NONE;
+                Roll_To_Obstacle = Moves.NO_ACTION;
+                Roll_Away_From_Obstacle = Moves.NO_ACTION;
+                Direction_To_Get_To_Obstacle = Utils.Direction.RIGHT; //Default, not gonna be used
+            }
+
             if(statusCircle.MOVING_TOWARDS_TARGET == Utils.Quantifier.NONE) //When circle is not moving towards the target
             {
                 if(statusCircle.NEAR_TARGET)
                 {
-                    move = Moves.NO_ACTION;
-                }
-                else //Circle has to start moving the other way
-                {
-                    if(statusCircle.LEFT_FROM_TARGET != Utils.Quantifier.NONE) //Turns around and starts moving to the right
+                    if(statusCircle.ABOVE_TARGET == Utils.Quantifier.SLIGHTLY) //Already Above target
                     {
-                        move = Moves.ROLL_RIGHT;
-                    }
-                    else if(statusCircle.RIGHT_FROM_TARGET != Utils.Quantifier.NONE) //Turns around and starts moving to the left
-                    {
-                        move = Moves.ROLL_LEFT;
-                    }
-                    else //Is directly above/below the platform, but with another platform between
-                    {
-                        //TODO RESOLVE ACTION TO DO IN THIS SITUATION
                         move = Moves.NO_ACTION;
                     }
+                    else //Has to roll away from target to gain speed to jump
+                    {
+                        if(Distance_From_Obstacle == Utils.Quantifier.NONE) //Is directly below target
+                        {
+                            //TODO CIRCLE MUST FIND A WAY TO TRY TO POSITION HIMSELF TO JUMP
+                            move = Moves.NO_ACTION; //TODO PROVISIONAL
+                        }
+                        else
+                        {
+                            move = Roll_Away_From_Obstacle;
+                        }
+                    }
+                }
+                else //Circle has to start moving in the obstacle's direction, because is far away
+                {
+                    move = Roll_To_Obstacle;
                 }
             }
             else //When the circle is moving towards the target
             {
-                if(statusCircle.MOVING_RIGHT != Utils.Quantifier.NONE) //If moving Right
+                if(Distance_From_Obstacle == Utils.Quantifier.SLIGHTLY) //when the circle has to jump now
                 {
-                    if(statusCircle.LEFT_FROM_TARGET == Utils.Quantifier.SLIGHTLY) //Jumps when almost there
-                    {
-                        move = Moves.JUMP;
-                    }
-                    else if(statusCircle.LEFT_FROM_TARGET > Utils.Quantifier.A_BIT) //If far away, rolls faster
-                    {
-                        move = Roll(Utils.Direction.RIGHT, Utils.Quantifier.A_BIT);
-                    }
-                    else if(statusCircle.LEFT_FROM_TARGET > Utils.Quantifier.SLIGHTLY) //If almost there, rolls slower
-                    {
-                        move = Roll(Utils.Direction.RIGHT, Utils.Quantifier.SLIGHTLY);
-                    }
-                    else
-                    {
-                        move = Moves.NO_ACTION;
-                    }
+                    move = Moves.JUMP;
                 }
-                else if(statusCircle.MOVING_LEFT != Utils.Quantifier.NONE) //If moving Left
+                else if(Distance_From_Obstacle > Utils.Quantifier.A_BIT) //When the circle is very far away, and has to go fast
                 {
-                    if (statusCircle.RIGHT_FROM_TARGET == Utils.Quantifier.SLIGHTLY) //Jumps when almost there
-                    {
-                        move = Moves.JUMP;
-                    }
-                    else if(statusCircle.RIGHT_FROM_TARGET > Utils.Quantifier.A_BIT)//If far away, rolls faster
-                    {
-                        move = Roll(Utils.Direction.LEFT, Utils.Quantifier.A_BIT);
-                    }
-                    else if (statusCircle.RIGHT_FROM_TARGET > Utils.Quantifier.SLIGHTLY) //If almost there, rolls slower
-                    {
-                        move = Roll(Utils.Direction.LEFT, Utils.Quantifier.SLIGHTLY);
-                    }
-                    else
-                    {
-                        move = Moves.NO_ACTION;
-                    }
+                    move = Roll(Direction_To_Get_To_Obstacle, Utils.Quantifier.A_BIT);
+                }
+                else if(Distance_From_Obstacle > Utils.Quantifier.SLIGHTLY) //When the circle is almost in the jumping spot
+                {
+                    move = Roll(Direction_To_Get_To_Obstacle, Utils.Quantifier.SLIGHTLY);
+                }
+                else //When an error occurs
+                {
+                    move = Moves.NO_ACTION;
                 }
             }
 
@@ -586,40 +594,14 @@ namespace GeometryFriendsAgents
         }
 
         //TODO
-        private Moves CircleJumpOntoRectangle_REMASTER()
+        private Moves JumpOntoRectangle()
         {
             Moves move = Moves.NO_ACTION;
 
-            if(this.predictor != null)
-            {
-                ActionSimulator sim = predictor;
-                sim.Update(1);
+            ObstacleRepresentation rectangle = new ObstacleRepresentation(rectangleInfo.X, rectangleInfo.Y, 
+                Utils.getRectangleWidth(rectangleInfo.Height), rectangleInfo.Height);
 
-                //Representation of the future status
-                Status futureStatus = new Status();
-                CircleRepresentation futureCircle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
-                    sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
-                RectangleRepresentation futureRectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
-                    sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
-
-
-                CircleRepresentation[] circles = new CircleRepresentation[] { futureCircle, new CircleRepresentation() };
-                RectangleRepresentation[] rectangles = new RectangleRepresentation[] { futureRectangle, new RectangleRepresentation() };
-                futureStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle); //TODO Change to actual collectible being caught
-
-
-                //TODO
-                if(this.agentStatus.RIGHT_FROM_OTHER_AGENT != Utils.Quantifier.NONE)
-                {
-                    
-                }
-                else if(this.agentStatus.LEFT_FROM_OTHER_AGENT != Utils.Quantifier.NONE)
-                {
-
-                }
-            }
-
-            return move;
+            return JumpOnto(rectangle);
         }
 
         public void SendRectangleToPosition(float x, float rectanglePredictedPositionX)
