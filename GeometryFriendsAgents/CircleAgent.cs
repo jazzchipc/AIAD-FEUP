@@ -59,6 +59,7 @@ namespace GeometryFriendsAgents
         int moveStep = 4;
 
         Matrix matrix;
+        Graph graph;
 
         //Communication settings
         Queue<Request> requests;
@@ -130,17 +131,13 @@ namespace GeometryFriendsAgents
             // create game matrix
             this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
-            // Start with a clear map (don't add any obstacles)
-            /*SearchParameters searchParameters = new SearchParameters(new Point((int)cI.X, (int)cI.Y), matrix.objective, matrix);
-            PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
-            List<Point> path = pathFinder.FindPath();
+            // create node graph
+            this.graph = new Graph();
+            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
+            this.graph.generateAdjacencyMatrix(this.matrix);
 
-            if (path.Count != 0)
-                this.path = path;
-            else
-                System.Diagnostics.Debug.WriteLine("A* could not find a path.");
-            */
-            
+            this.graph.printAdjacency();
+
             DebugSensorsInfo();
         }
 

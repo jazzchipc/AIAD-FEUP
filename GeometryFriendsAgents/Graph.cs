@@ -1,3 +1,4 @@
+using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -43,6 +44,57 @@ namespace GeometryFriendsAgents
             return adjacentNodes;
         }
 
+        public void generateNodes(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI)
+        {
+            int rectangleX = (int)rI.X;
+            int rectangleY = (int)rI.Y;
+
+            int circleX = (int)cI.X;
+            int circleY = (int)cI.Y;
+
+            Node rectangle = new Node(rectangleX, rectangleY, Node.Type.Rectangle);
+            this.addNode(rectangle);
+
+            Node circle = new Node(circleX, circleY, Node.Type.Circle);
+            this.addNode(circle);
+
+            // OBSTACLE
+            for (int i = 0; i < oI.Length; i++)
+            {
+                ObstacleRepresentation obstacle = oI[i];
+
+                Node obstacleNode = new Node((int)obstacle.X, (int)obstacle.Y, Node.Type.Obstacle);
+                this.addNode(obstacleNode);
+            }
+
+            // CIRCLE PLATFORM
+            for (int i = 0; i < cPI.Length; i++)
+            {
+                ObstacleRepresentation circlePlatform = cPI[i];
+
+                Node circlePlatformNode = new Node((int)circlePlatform.X, (int)circlePlatform.Y, Node.Type.CirclePlatform);
+                this.addNode(circlePlatformNode);
+            }
+
+            // RECTANGLE PLATFORM
+            for (int i = 0; i < rPI.Length; i++)
+            {
+                ObstacleRepresentation rectanglePlatform = rPI[i];
+
+                Node rectanglePlatformNode = new Node((int)rectanglePlatform.X, (int)rectanglePlatform.Y, Node.Type.RectanglePlatform);
+                this.addNode(rectanglePlatformNode);
+            }
+
+            // DIAMONDS
+            for (int i = 0; i < colI.Length; i++)
+            {
+                CollectibleRepresentation diamond = colI[i];
+
+                Node diamondNode = new Node((int)diamond.X, (int)diamond.Y, Node.Type.Diamond);
+                this.addNode(diamondNode);
+            }
+        }
+
         public void generateAdjacencyMatrix(Matrix matrix)
         {
             if(this.nodes == null)
@@ -56,6 +108,11 @@ namespace GeometryFriendsAgents
             {
                 for(int j = 0; j < this.nodes.Count; j++)
                 {
+                    if(i == j)
+                    {
+                        continue;
+                    }
+
                     if(matrix.openSpace(this.nodes[i].location, this.nodes[j].location))
                     {
                         this.adjacencyMatrix[i, j] = true;
@@ -65,6 +122,18 @@ namespace GeometryFriendsAgents
                         this.adjacencyMatrix[i, j] = false;
                     }
                 }
+            }
+        }
+
+        public void printAdjacency()
+        {
+            for (int i = 0; i < this.adjacencyMatrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < this.adjacencyMatrix.GetLength(1); j++)
+                {
+                    System.Diagnostics.Debug.Write(this.adjacencyMatrix[i, j] + "\t");
+                }
+                System.Diagnostics.Debug.WriteLine("");
             }
         }
         

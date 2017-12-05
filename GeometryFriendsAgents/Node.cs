@@ -5,6 +5,7 @@ namespace GeometryFriendsAgents
 {
     public class Node
     {
+        private static int numberOfNodes = 0;
         /// <summary>
         /// The index of the node in the graph he was inserted into
         /// </summary>
@@ -83,12 +84,15 @@ namespace GeometryFriendsAgents
         /// <param name="y">The node's location along the Y axis</param>
         /// <param name="isWalkable">True if the node can be traversed, false if the node is a 'wall' for the agent</param>
         /// <param name="endLocation">The location of the destination node</param>
-        public Node(int x, int y, Type type, Point endLocation)
+        public Node(int x, int y, Type type)
         {
+            this.index = numberOfNodes;
+
             this.location = new Point(x, y);
             this.type = type;
-            this.hCost = Utils.GetTraversalCost(this.location, endLocation);
             this.gCost = (float.MaxValue / 2);  // start gCost at 'infinity' (used float.MaxValue / 2 because of overflow when adding hCost)
+
+            numberOfNodes++;
         }
 
         public override string ToString()

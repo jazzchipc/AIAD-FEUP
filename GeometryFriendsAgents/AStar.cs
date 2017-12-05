@@ -143,6 +143,8 @@ namespace GeometryFriendsAgents
                         // This is the best path, so save it
                         nextNode.parentNode = current;
                         nextNode.gCost = tentativeGCost;
+                        nextNode.hCost = Utils.GetTraversalCost(nextNode.location, endNode.location);
+                        // fCost return gCost + hCost so no need to update it
                     }
                 }
             }
