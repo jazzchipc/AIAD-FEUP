@@ -1,52 +1,49 @@
 using GeometryFriends.AI.Perceptions.Information;
 using System.Drawing;
+using System;
 
 namespace GeometryFriendsAgents
 {
     public class Matrix
     {
-        public Node[,] nodes;
-
-        public Point objective { get; private set; }
-
-        public int getHeight()
-        {
-            return this.nodes.Length;
-        }
+        private Pixel[,] pixels;
 
         public int getWidth()
         {
-            return this.nodes.GetLength(0);
+            return this.pixels.Length;
         }
 
-        public Matrix(int numOfRows, int numOfCols, Point objective)
+        public int getHeight()
         {
-            this.objective = objective;
+            return this.pixels.GetLength(1);
+        }
 
-            this.nodes = new Node[numOfRows + 3, numOfCols + 3];
+        public Matrix(int numOfRows, int numOfCols)
+        {
+            this.pixels = new Pixel[numOfRows, numOfCols];  // create array
 
-            for(int i = 0; i < this.nodes.GetLength(0); i++)
+            for(int i = 0; i < this.pixels.GetLength(0); i++)
             {
-                for(int j = 0; j < this.nodes.GetLength(1); j++)
+                for(int j = 0; j < this.pixels.GetLength(1); j++)
                 {
-                    this.nodes[i, j] = new Node(i, j, Node.Type.Space, objective);
+                    this.pixels[i, j] = new Pixel(i, j, Pixel.Type.Space);
                 }
             }
         }
 
-        public void addNode(Node node)
+        public void addPixel(Pixel pixel)
         {
-            this.nodes[node.location.X, node.location.Y] = node;
+            this.pixels[pixel.location.X, pixel.location.Y] = pixel;
         }
 
-        public Node getNode(int x, int y)
+        public Pixel getPixel(int x, int y)
         {
-            return this.nodes[y, x];
+           return this.pixels[x, y];
         }
 
         public static Matrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
-            Matrix matrix = new Matrix(area.Width, area.Height, new Point((int)colI[0].X, (int)colI[0].Y));
+            Matrix matrix = new Matrix(area.Width, area.Height);
 
             int rectangleX = (int)rI.X;
             int rectangleY = (int)rI.Y;
@@ -61,7 +58,14 @@ namespace GeometryFriendsAgents
             {
                 for (int y = rectangleY - 10 / 2; y < rectangleY + 10 / 2; y++)
                 {
-                    matrix.getNode(x, y).type = Node.Type.Rectangle;
+                    if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        matrix.getPixel(x, y).type = Pixel.Type.Rectangle;
+                    }
                 }
             }
 
@@ -70,7 +74,14 @@ namespace GeometryFriendsAgents
             {
                 for (int y = circleY - circleRadius / 2; y < circleY + circleRadius / 2; y++)
                 {
-                    matrix.getNode(x, y).type = Node.Type.Circle;
+                    if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        matrix.getPixel(x, y).type = Pixel.Type.Circle;
+                    }
                 }
             }
 
@@ -83,7 +94,78 @@ namespace GeometryFriendsAgents
                 {
                     for (int y = (int)(obstacle.Y - obstacle.Height / 2); y < (int)(obstacle.Y + obstacle.Height / 2); y++)
                     {
-                        matrix.getNode(x, y).type = Node.Type.Obstacle;
+                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            matrix.getPixel(x, y).type = Pixel.Type.Obstacle;
+                        }
+                    }
+                }
+            }
+
+            // CIRCLE PLATFORM
+            for (int i = 0; i < cPI.Length; i++)
+            {
+                ObstacleRepresentation circlePlatform = cPI[i];
+
+                for (int x = (int)(circlePlatform.X - circlePlatform.Width / 2); x < (int)(circlePlatform.X + circlePlatform.Width / 2); x++)
+                {
+                    for (int y = (int)(circlePlatform.Y - circlePlatform.Height / 2); y < (int)(circlePlatform.Y + circlePlatform.Height / 2); y++)
+                    {
+                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            matrix.getPixel(x, y).type = Pixel.Type.CirclePlatform;
+                        }
+                    }
+                }
+            }
+
+            // RECTANGLE PLATFORM
+            for (int i = 0; i < rPI.Length; i++)
+            {
+                ObstacleRepresentation rectanglePlatform = rPI[i];
+
+                for (int x = (int)(rectanglePlatform.X - rectanglePlatform.Width / 2); x < (int)(rectanglePlatform.X + rectanglePlatform.Width / 2); x++)
+                {
+                    for (int y = (int)(rectanglePlatform.Y - rectanglePlatform.Height / 2); y < (int)(rectanglePlatform.Y + rectanglePlatform.Height / 2); y++)
+                    {
+                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            matrix.getPixel(x, y).type = Pixel.Type.RectanglePlatform;
+                        }
+                    }
+                }
+            }
+
+            // DIAMONDS
+            for (int i = 0; i < colI.Length; i++)
+            {
+                CollectibleRepresentation diamond = colI[i];
+                int diamondWidth = 40;
+
+                for (int x = (int)(diamond.X - diamondWidth / 2); x < (int)(diamond.X + diamondWidth / 2); x++)
+                {
+                    for (int y = (int)(diamond.Y - diamondWidth / 2); y < (int)(diamond.Y + diamondWidth / 2); y++)
+                    {
+                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            matrix.getPixel(x, y).type = Pixel.Type.Diamond;
+                        }
                     }
                 }
             }
@@ -91,6 +173,32 @@ namespace GeometryFriendsAgents
             return matrix;
         }
 
+        /// <summary>
+        /// Check if a point "views" the other (if there is a straight line between them with no obstacles)
+        /// </summary>
+        /// <param name="beginPoint"></param>
+        /// <param name="endPoint"></param>
+        /// <returns></returns>
+        public bool openSpace(Point beginPoint, Point endPoint)
+        {
+            int deltaX = endPoint.X - beginPoint.X;
+            int deltaY = endPoint.Y - beginPoint.Y;
+
+            float m = deltaY / deltaX;
+
+            for(int x = beginPoint.X; x < endPoint.X; x++)
+            {
+                float currentY = m * x + beginPoint.Y;
+
+                // since the line is not really straight, we must for more than one point
+                if (this.pixels[x, (int)Math.Floor(currentY)].type != Pixel.Type.Space || 
+                    this.pixels[x, (int)Math.Ceiling(currentY)].type != Pixel.Type.Space)   
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
 

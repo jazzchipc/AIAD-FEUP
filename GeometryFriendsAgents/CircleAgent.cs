@@ -131,11 +131,15 @@ namespace GeometryFriendsAgents
             this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
             // Start with a clear map (don't add any obstacles)
-            SearchParameters searchParameters = new SearchParameters(new Point((int)cI.X, (int)cI.Y), matrix.objective, matrix);
-            PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle, this.matrix);
+            /*SearchParameters searchParameters = new SearchParameters(new Point((int)cI.X, (int)cI.Y), matrix.objective, matrix);
+            PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
             List<Point> path = pathFinder.FindPath();
-            this.path = path;
-            
+
+            if (path.Count != 0)
+                this.path = path;
+            else
+                System.Diagnostics.Debug.WriteLine("A* could not find a path.");
+            */
             
             DebugSensorsInfo();
         }
@@ -203,14 +207,16 @@ namespace GeometryFriendsAgents
             RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
             this.agentStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle);
 
-            if (this.collectiblesInfo.Length <= 0)
+            /*if (this.collectiblesInfo.Length <= 0)
             {
                 currentAction = Moves.NO_ACTION;    // collected all
             }
             else
             {
                 currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
-            }
+            }*/
+
+            currentAction = Moves.NO_ACTION;
 
             //send a message to the rectangle agent telling what action it chose
             messages.Add(new AgentMessage("Going to :" + currentAction));
@@ -289,7 +295,8 @@ namespace GeometryFriendsAgents
                     //add all the simulator generated debug information about circle/rectangle predicted paths
                     newDebugInfo.AddRange(toSim.SimulationHistoryDebugInformation);
 
-                    newDebugInfo.Add(DebugInformationFactory.CreateLineDebugInfo(path[0], path[path.Count - 1], GeometryFriends.XNAStub.Color.Yellow));
+                    if(this.path != null)
+                        PathFinder.ShowPath(newDebugInfo, path);
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)
                     {

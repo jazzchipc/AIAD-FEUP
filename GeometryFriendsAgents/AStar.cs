@@ -1,4 +1,5 @@
-﻿using GeometryFriends.AI.Perceptions.Information;
+﻿using GeometryFriends.AI.Debug;
+using GeometryFriends.AI.Perceptions.Information;
 using GeometryFriendsAgents;
 using System;
 using System.Collections.Generic;
@@ -15,38 +16,36 @@ namespace GeometryFriendsAgents
     /// </summary>
     public class SearchParameters
     {
-        public Point StartLocation { get; set; }
+        public Node startNode { get; set; }
 
-        public Point EndLocation { get; set; }
+        public Node endNode { get; set; }
 
-        public Matrix matrix;
+        public Graph graph;
 
-        public SearchParameters(Point startLocation, Point endLocation, Matrix matrix)
+        public SearchParameters(Node startNode, Node goalNode, Graph graph)
         {
-            this.StartLocation = startLocation;
-            this.EndLocation = endLocation;
-            this.matrix = matrix;
+            this.startNode = startNode;
+            this.endNode = endNode;
+            this.graph = graph;
         }
     }
     public class PathFinder
     {
-        private Matrix matrix;
-        private Node startNode;
-        private Node endNode;
+        private Graph graph;
         private SearchParameters searchParameters;
         public AgentType agentType;
+
+        List<Node> openSet;
+        List<Node> closedSet;
 
         /// <summary>
         /// Create a new instance of PathFinder
         /// </summary>
         /// <param name="searchParameters"></param>
-        public PathFinder(SearchParameters searchParameters, AgentType agentType, Matrix matrix)
+        public PathFinder(Graph graph, SearchParameters searchParameters, AgentType agentType)
         {
+            this.graph = graph;
             this.searchParameters = searchParameters;
-            this.matrix = matrix;
-            this.startNode = this.matrix.nodes[searchParameters.StartLocation.X, searchParameters.StartLocation.Y];
-            this.startNode.state = Node.State.Open;
-            this.endNode = this.matrix.nodes[searchParameters.EndLocation.X, searchParameters.EndLocation.Y];
             this.agentType = agentType;
         }
 
@@ -58,11 +57,11 @@ namespace GeometryFriendsAgents
         {
             // The start node is the first entry in the 'open' list
             List<Point> path = new List<Point>();
-            bool success = Search(startNode);
+            bool success = this.Search();
             if (success)
             {
                 // If a path was found, follow the parents from the end node to build a list of locations
-                Node node = this.endNode;
+                Node node = this.searchParameters.endNode;
                 while (node.parentNode != null)
                 {
                     path.Add(node.location);
@@ -77,30 +76,74 @@ namespace GeometryFriendsAgents
         }
 
         /// <summary>
-        /// Attempts to find a path to the destination node using <paramref name="currentNode"/> as the starting location
+        /// Attempts to find a path to the destination node using startNode as the starting location
         /// </summary>
-        /// <param name="currentNode">The node from which to find a path</param>
         /// <returns>True if a path to the destination has been found, otherwise false</returns>
-        private bool Search(Node currentNode)
+        private bool Search()
         {
-            // Set the current node to Closed since it cannot be traversed more than once
-            currentNode.state = Node.State.Closed;
-            List<Node> nextNodes = GetAdjacentWalkableNodes(currentNode);
+            this.openSet = new List<Node>();
+            this.closedSet = new List<Node>();
 
-            // Sort by F-value so that the shortest possible routes are considered first
-            nextNodes.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
-            foreach (var nextNode in nextNodes)
+            Node startNode = this.searchParameters.startNode;
+            Node endNode = this.searchParameters.endNode;
+
+            openSet.Add(startNode);
+
+            // distance from start node to itself is 0 
+            startNode.gCost = 0;  
+
+            // heuristic is distance in straight line. It is admissible, because it never overestimates the real cost.
+            startNode.hCost = Utils.GetTraversalCost(startNode.location, endNode.location); 
+            
+
+            while(openSet.Count > 0)
             {
+                System.Diagnostics.Debug.WriteLine("Open Set: " + openSet.Count + " nodes.");
+                System.Diagnostics.Debug.WriteLine("Closed Set: " + closedSet.Count + " nodes.");
+
+                // order openSet by fCost
+                openSet.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
+
+                // node with lowest fCost in open set
+                Node current = openSet[0]; 
+
                 // Check whether the end node has been reached
-                if (nextNode.location == this.endNode.location)
+                if (current.location == endNode.location)
                 {
                     return true;
                 }
-                else
+
+                openSet.Remove(current);
+                closedSet.Add(current);
+
+                List<Node> nextNodes = this.graph.getAdjacentNodes(current.index);
+
+                // Sort by F-value so that the shortest possible routes are considered first
+                nextNodes.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
+                foreach (var nextNode in nextNodes)
                 {
-                    // If not, check the next set of nodes
-                    if (Search(nextNode)) // Note: Recurses back into Search(Node)
-                        return true;
+                    // Ignore already-closed nodes
+                    if (this.closedSet.Contains(nextNode))
+                    {
+                        continue;
+                    }
+
+                    // Check whether the end node has been reached
+                    if (!this.openSet.Contains(nextNode))
+                    {
+                        openSet.Add(nextNode);
+                    }
+
+ 
+                    float traversalCost = Utils.GetTraversalCost(current.location, nextNode.location);
+                    float tentativeGCost = nextNode.gCost + traversalCost;
+
+                    if (tentativeGCost < nextNode.gCost)
+                    {
+                        // This is the best path, so save it
+                        nextNode.parentNode = current;
+                        nextNode.gCost = tentativeGCost;
+                    }
                 }
             }
 
@@ -109,106 +152,13 @@ namespace GeometryFriendsAgents
         }
 
         /// <summary>
-        /// Returns any nodes that are adjacent to <paramref name="fromNode"/> and may be considered to form the next step in the path
+        /// Displays the map and path as a simple grid to the game with a yellow line
         /// </summary>
-        /// <param name="fromNode">The node from which to return the next possible nodes in the path</param>
-        /// <returns>A list of next possible nodes in the path</returns>
-        private List<Node> GetAdjacentWalkableNodes(Node fromNode)
+        public static void ShowPath(List<DebugInformation> agentDebugList, List<Point> path)
         {
-            List<Node> walkableNodes = new List<Node>();
-            IEnumerable<Point> nextLocations = GetAdjacentLocations(fromNode.location);
-
-            foreach (var location in nextLocations)
+            for(int i = 0; i < path.Count - 1; i++)
             {
-                int x = location.X;
-                int y = location.Y;
-
-                // Stay within the grid's boundaries
-                if (x < 0 || x >= this.matrix.getWidth() || y < 0 || y >= this.matrix.getHeight())
-                    continue;
-
-                Node node = this.matrix.nodes[x, y];
-                // Ignore non-walkable nodes
-                if (!node.isWalkable(this.agentType))
-                    continue;
-
-                // Ignore already-closed nodes
-                if (node.state == Node.State.Closed)
-                    continue;
-
-                // Already-open nodes are only added to the list if their G-value is lower going via this route.
-                if (node.state == Node.State.Open)
-                {
-                    float traversalCost = Node.GetTraversalCost(node.location, node.parentNode.location);
-                    float gTemp = fromNode.gCost + traversalCost;
-                    if (gTemp < node.gCost)
-                    {
-                        node.parentNode = fromNode;
-                        walkableNodes.Add(node);
-                    }
-                }
-                else
-                {
-                    // If it's untested, set the parent and flag it as 'Open' for consideration
-                    node.parentNode = fromNode;
-                    node.state = Node.State.Open;
-                    walkableNodes.Add(node);
-                }
-            }
-
-            return walkableNodes;
-        }
-
-        /// <summary>
-        /// Returns the eight locations immediately adjacent (orthogonally and diagonally) to <paramref name="fromLocation"/>
-        /// </summary>
-        /// <param name="fromLocation">The location from which to return all adjacent points</param>
-        /// <returns>The locations as an IEnumerable of Points</returns>
-        private static IEnumerable<Point> GetAdjacentLocations(Point fromLocation)
-        {
-            return new Point[]
-            {
-                new Point(fromLocation.X-1, fromLocation.Y-1),
-                new Point(fromLocation.X-1, fromLocation.Y  ),
-                new Point(fromLocation.X-1, fromLocation.Y+1),
-                new Point(fromLocation.X,   fromLocation.Y+1),
-                new Point(fromLocation.X+1, fromLocation.Y+1),
-                new Point(fromLocation.X+1, fromLocation.Y  ),
-                new Point(fromLocation.X+1, fromLocation.Y-1),
-                new Point(fromLocation.X,   fromLocation.Y-1)
-            };
-        }
-
-        /// <summary>
-        /// Displays the map and path as a simple grid to the console
-        /// </summary>
-        /// <param name="title">A descriptive title</param>
-        /// <param name="path">The points that comprise the path</param>
-        public void ShowRoute(string title, IEnumerable<Point> path, Matrix matrix)
-        {
-            System.Diagnostics.Debug.Write("{0}\r\n", title);
-            for (int y = this.matrix.nodes.GetLength(1) - 1; y >= 0; y--) // Invert the Y-axis so that coordinate 0,0 is shown in the bottom-left
-            {
-                for (int x = 0; x < this.matrix.nodes.GetLength(0); x++)
-                {
-                    if (this.searchParameters.StartLocation.Equals(new Point(x, y)))
-                        // Show the start position
-                        System.Diagnostics.Debug.Write('S');
-                    else if (this.searchParameters.EndLocation.Equals(new Point(x, y)))
-                        // Show the end position
-                        System.Diagnostics.Debug.Write('F');
-                    else if (this.matrix.nodes[x, y].isWalkable(this.agentType) == false)
-                        // Show any barriers
-                        System.Diagnostics.Debug.Write('░');
-                    else if (path.Where(p => p.X == x && p.Y == y).Any())
-                        // Show the path in between
-                        System.Diagnostics.Debug.Write('*');
-                    else
-                        // Show nodes that aren't part of the path
-                        System.Diagnostics.Debug.Write('·');
-                }
-
-                System.Diagnostics.Debug.WriteLine("");
+                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i], path[i+1], GeometryFriends.XNAStub.Color.Yellow));
             }
         }
     }
