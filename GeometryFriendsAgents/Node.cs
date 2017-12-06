@@ -126,5 +126,10 @@ namespace GeometryFriendsAgents
                 }
             }
         }
+
+        public static void resetNumberOfNodes()
+        {
+            numberOfNodes = 0;
+        }
     }
 }

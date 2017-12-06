@@ -30,6 +30,8 @@ namespace GeometryFriendsAgents
 
             this.diamondNodes = new List<Node>();
             this.knownPaths = new List<List<Node>>();
+
+            Node.resetNumberOfNodes();
         }
 
         public void addNode(Node node)
@@ -160,7 +162,7 @@ namespace GeometryFriendsAgents
         {
             int nodeDebugRadius = 20;
            
-            for (int i = 0; i < graph.nodes.Count - 1; i++)
+            for (int i = 0; i < graph.nodes.Count; i++)
             {
                 Node currentNode = graph.nodes[i];
                 Point nodeDebugLocation = new Point(currentNode.location.X - (int)(nodeDebugRadius / 2), currentNode.location.Y - (int)(nodeDebugRadius / 2));

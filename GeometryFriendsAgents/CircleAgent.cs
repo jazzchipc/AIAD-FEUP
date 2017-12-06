@@ -133,11 +133,7 @@ namespace GeometryFriendsAgents
             this.graph = new Graph(AgentType.Circle, this.matrix);
             this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
             this.graph.generateAdjacencyMatrix(this.matrix);
-
-            // TODO: make adjacency depend on the type of agent and use 'isWalkable()'
-            this.graph.printAdjacency();
-
-
+            
             for(int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
             {
                 SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[i].index, this.graph);
