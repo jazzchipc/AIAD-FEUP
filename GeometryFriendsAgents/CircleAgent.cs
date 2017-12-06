@@ -139,7 +139,7 @@ namespace GeometryFriendsAgents
             // TODO: make adjacency depend on the type of agent and use 'isWalkable()'
             this.graph.printAdjacency();
 
-            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[1].index, this.graph);
+            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[2].index, this.graph);
             PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
             this.path = pathFinder.FindPath();
 

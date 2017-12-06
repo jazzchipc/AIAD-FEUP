@@ -189,7 +189,7 @@ namespace GeometryFriendsAgents
                 float m = (float)deltaY / (float)deltaX;
                 int signX = Math.Sign(deltaX);
 
-                for (int x = 0; x < Math.Abs(deltaX); x++)
+                for (int x = 1; x < Math.Abs(deltaX); x++)  // start on next point, because point 0 is unwalkable, since it belongs to something
                 {
                     int stepX = x * signX;
                     float currentY = m * stepX + beginPoint.Y;
@@ -204,7 +204,7 @@ namespace GeometryFriendsAgents
                     }
 
                     // since the line is not really straight, we must for more than one point and use a 'wide' line
-                    if (!this.pixels[currentX, (int)Math.Floor(currentY)].isWalkable(agentType) ||
+                    if (!this.pixels[currentX, (int)Math.Floor(currentY)].isWalkable(agentType) &&
                         !this.pixels[currentX, (int)Math.Ceiling(currentY)].isWalkable(agentType))
                     {
                         return false;
