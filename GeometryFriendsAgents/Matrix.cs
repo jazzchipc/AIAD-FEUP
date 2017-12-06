@@ -242,5 +242,10 @@ namespace GeometryFriendsAgents
         {
             return (xInBounds(x) && yInBounds(y));
         }
+
+        public bool inBounds(Point point)
+        {
+            return (xInBounds(point.X) && yInBounds(point.Y));
+        }
     }
 }

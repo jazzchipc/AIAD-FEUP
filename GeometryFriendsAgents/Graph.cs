@@ -12,15 +12,18 @@ namespace GeometryFriendsAgents
         private bool[,] adjacencyMatrix;  // [i,j] tells you if node i is connected to node j
         private AgentType agentType;
 
+        private Matrix matrix;
+
         // Nodes list
         public Node rectangleNode { get; private set; }
         public Node circleNode { get; private set; }
         public List<Node> diamondNodes { get; private set; }
 
-        public Graph(AgentType agentType)
+        public Graph(AgentType agentType, Matrix matrix)
         {
             this.nodes = new Dictionary<int, Node>();
             this.agentType = agentType;
+            this.matrix = matrix;
 
             this.diamondNodes = new List<Node>();
         }
@@ -75,8 +78,7 @@ namespace GeometryFriendsAgents
             {
                 ObstacleRepresentation obstacle = oI[i];
 
-                Node obstacleNode = new Node((int)obstacle.X, (int)obstacle.Y, Node.Type.Obstacle);
-                this.addNode(obstacleNode);
+                createNodesForObstacle(obstacle, Node.Type.Obstacle);
             }
 
             // CIRCLE PLATFORM
@@ -84,8 +86,7 @@ namespace GeometryFriendsAgents
             {
                 ObstacleRepresentation circlePlatform = cPI[i];
 
-                Node circlePlatformNode = new Node((int)circlePlatform.X, (int)circlePlatform.Y, Node.Type.CirclePlatform);
-                this.addNode(circlePlatformNode);
+                createNodesForObstacle(circlePlatform, Node.Type.CirclePlatform);
             }
 
             // RECTANGLE PLATFORM
@@ -93,8 +94,7 @@ namespace GeometryFriendsAgents
             {
                 ObstacleRepresentation rectanglePlatform = rPI[i];
 
-                Node rectanglePlatformNode = new Node((int)rectanglePlatform.X, (int)rectanglePlatform.Y, Node.Type.RectanglePlatform);
-                this.addNode(rectanglePlatformNode);
+                createNodesForObstacle(rectanglePlatform, Node.Type.RectanglePlatform);
             }
 
             // DIAMONDS
@@ -162,6 +162,38 @@ namespace GeometryFriendsAgents
                 Point nodeDebugLocation = new Point(currentNode.location.X - (int)(nodeDebugRadius / 2), currentNode.location.Y - (int)(nodeDebugRadius / 2));
 
                 agentDebugList.Add(DebugInformationFactory.CreateCircleDebugInfo(nodeDebugLocation, nodeDebugRadius, GeometryFriends.XNAStub.Color.Red));
+            }
+        }
+
+        /// <summary>
+        /// Creates nodes for the vertices of an obstacle. Remember it's an inverted Y axis.
+        /// </summary>
+        /// <param name="obstacle"></param>
+        /// <param name="obstacleType"></param>
+        /// <returns></returns>
+        private void createNodesForObstacle(ObstacleRepresentation obstacle, Node.Type obstacleType)
+        {
+            List<Point> corners = new List<Point>();
+
+            Point upLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2), (int)(obstacle.Y - obstacle.Height / 2));
+            Point upRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2), (int)(obstacle.Y - obstacle.Height / 2));
+            Point downLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2), (int)(obstacle.Y + obstacle.Height / 2));
+            Point downRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2), (int)(obstacle.Y + obstacle.Height / 2));
+
+            corners.Add(upLeftCorner);
+            corners.Add(upRightCorner);
+            corners.Add(downLeftCorner);
+            corners.Add(downRightCorner);
+
+            for(int i = 0; i < corners.Count; i++)
+            {
+                Point currentCorner = corners[i];
+
+                if (this.matrix.inBounds(currentCorner))
+                {
+                    Node node = new Node(currentCorner.X, currentCorner.Y, obstacleType);
+                    this.addNode(node);
+                }
             }
         }
 

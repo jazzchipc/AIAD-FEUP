@@ -132,7 +132,7 @@ namespace GeometryFriendsAgents
             this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
             // create node graph
-            this.graph = new Graph(AgentType.Circle);
+            this.graph = new Graph(AgentType.Circle, this.matrix);
             this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
             this.graph.generateAdjacencyMatrix(this.matrix);
 
