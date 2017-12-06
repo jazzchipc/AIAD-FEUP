@@ -1,3 +1,4 @@
+using GeometryFriends.AI.Debug;
 using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
@@ -11,17 +12,27 @@ namespace GeometryFriendsAgents
         private bool[,] adjacencyMatrix;  // [i,j] tells you if node i is connected to node j
         private AgentType agentType;
 
+        private Matrix matrix;
+
         // Nodes list
         public Node rectangleNode { get; private set; }
         public Node circleNode { get; private set; }
         public List<Node> diamondNodes { get; private set; }
 
-        public Graph(AgentType agentType)
+        // Known paths
+        public List<Path> knownPaths;
+        public List<float> knownCosts;
+
+        public Graph(AgentType agentType, Matrix matrix)
         {
             this.nodes = new Dictionary<int, Node>();
             this.agentType = agentType;
+            this.matrix = matrix;
 
             this.diamondNodes = new List<Node>();
+            this.knownPaths = new List<Path>();
+
+            Node.resetNumberOfNodes();
         }
 
         public void addNode(Node node)
@@ -74,8 +85,7 @@ namespace GeometryFriendsAgents
             {
                 ObstacleRepresentation obstacle = oI[i];
 
-                Node obstacleNode = new Node((int)obstacle.X, (int)obstacle.Y, Node.Type.Obstacle);
-                this.addNode(obstacleNode);
+                createNodesForObstacle(obstacle, Node.Type.Obstacle);
             }
 
             // CIRCLE PLATFORM
@@ -83,8 +93,7 @@ namespace GeometryFriendsAgents
             {
                 ObstacleRepresentation circlePlatform = cPI[i];
 
-                Node circlePlatformNode = new Node((int)circlePlatform.X, (int)circlePlatform.Y, Node.Type.CirclePlatform);
-                this.addNode(circlePlatformNode);
+                createNodesForObstacle(circlePlatform, Node.Type.CirclePlatform);
             }
 
             // RECTANGLE PLATFORM
@@ -92,8 +101,7 @@ namespace GeometryFriendsAgents
             {
                 ObstacleRepresentation rectanglePlatform = rPI[i];
 
-                Node rectanglePlatformNode = new Node((int)rectanglePlatform.X, (int)rectanglePlatform.Y, Node.Type.RectanglePlatform);
-                this.addNode(rectanglePlatformNode);
+                createNodesForObstacle(rectanglePlatform, Node.Type.RectanglePlatform);
             }
 
             // DIAMONDS
@@ -122,10 +130,9 @@ namespace GeometryFriendsAgents
                 {
                     if(i == j)
                     {
-                        continue;
+                        this.adjacencyMatrix[i, j] = false;
                     }
-
-                    if(matrix.walkableLine(this.nodes[i].location, this.nodes[j].location, this.agentType))
+                    else if(matrix.walkableLine(this.nodes[i].location, this.nodes[j].location, this.agentType))
                     {
                         this.adjacencyMatrix[i, j] = true;
                     }
@@ -148,6 +155,95 @@ namespace GeometryFriendsAgents
                 System.Diagnostics.Debug.WriteLine("");
             }
         }
-        
+
+        /// <summary>
+        /// Highlights all the nodes in the map
+        /// </summary>
+        public static void ShowNodes(List<DebugInformation> agentDebugList, Graph graph)
+        {
+            int nodeDebugRadius = 20;
+           
+            for (int i = 0; i < graph.nodes.Count; i++)
+            {
+                Node currentNode = graph.nodes[i];
+                Point nodeDebugLocation = new Point(currentNode.location.X - (int)(nodeDebugRadius / 2), currentNode.location.Y - (int)(nodeDebugRadius / 2));
+
+                agentDebugList.Add(DebugInformationFactory.CreateCircleDebugInfo(nodeDebugLocation, nodeDebugRadius, GeometryFriends.XNAStub.Color.Red));
+            }
+        }
+
+        /// <summary>
+        /// Creates nodes for the vertices of an obstacle. Remember it's an inverted Y axis.
+        /// </summary>
+        /// <param name="obstacle"></param>
+        /// <param name="obstacleType"></param>
+        /// <returns></returns>
+        private void createNodesForObstacle(ObstacleRepresentation obstacle, Node.Type obstacleType)
+        {
+            List<Point> corners = new List<Point>();
+
+            Point upLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2), (int)(obstacle.Y - obstacle.Height / 2));
+            Point upRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2), (int)(obstacle.Y - obstacle.Height / 2));
+            Point downLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2), (int)(obstacle.Y + obstacle.Height / 2));
+            Point downRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2), (int)(obstacle.Y + obstacle.Height / 2));
+
+            corners.Add(upLeftCorner);
+            corners.Add(upRightCorner);
+            corners.Add(downLeftCorner);
+            corners.Add(downRightCorner);
+
+            for(int i = 0; i < corners.Count; i++)
+            {
+                Point currentCorner = corners[i];
+
+                if (this.matrix.inBounds(currentCorner))
+                {
+                    Node node = new Node(currentCorner.X, currentCorner.Y, obstacleType);
+                    this.addNode(node);
+                }
+            }
+        }
+
+        public void showAllKnownPaths(List<DebugInformation> agentDebugList)
+        {
+            for(int i = 0; i < this.knownPaths.Count; i++)
+            {
+                showPath(agentDebugList, this.knownPaths[i].path);
+            }
+        }
+
+        /// <summary>
+        /// Displays the map and path as a simple grid to the game with a yellow line
+        /// </summary>
+        public static void showPath(List<DebugInformation> agentDebugList, List<Node> path)
+        {
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i].location, path[i + 1].location, GeometryFriends.XNAStub.Color.Yellow));
+            }
+        }
+
+    }
+
+    public class Path
+    {
+        public float cost { private set; get; }
+        public List<Node> path { private set; get; }
+
+        public Path(List<Node> path, float cost)
+        {
+            this.path = path;
+            this.cost = cost;
+        }
+
+        public Node getStartNode()
+        {
+            return path[0];
+        }
+
+        public Node getGoalNode()
+        {
+            return path[path.Count - 1];
+        }
     }
 }

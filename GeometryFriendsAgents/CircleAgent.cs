@@ -67,8 +67,6 @@ namespace GeometryFriendsAgents
         //Status tracking
         Status agentStatus;
 
-        List<Point> path;
-
         public CircleAgent()
         {
             //Change flag if agent is not to be used
@@ -132,24 +130,24 @@ namespace GeometryFriendsAgents
             this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
             // create node graph
-            this.graph = new Graph(AgentType.Circle);
+            this.graph = new Graph(AgentType.Circle, this.matrix);
             this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
             this.graph.generateAdjacencyMatrix(this.matrix);
-
-            // TODO: make adjacency depend on the type of agent and use 'isWalkable()'
-            this.graph.printAdjacency();
-
-            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[0].index, this.graph);
-            PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
-            this.path = pathFinder.FindPath();
-
-            if(this.path.Count <= 0)
+            
+            for(int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
             {
-                System.Diagnostics.Debug.WriteLine("A* did not find a path.");
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("A* found a path.");
+                SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[i].index, this.graph);
+                PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
+                Path knownPath = pathFinder.FindPath();
+                if (knownPath != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("A* found a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
+                    this.graph.knownPaths.Add(knownPath);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("A* did NOT find a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
+                }
             }
 
             DebugSensorsInfo();
@@ -307,8 +305,11 @@ namespace GeometryFriendsAgents
                     //add all the simulator generated debug information about circle/rectangle predicted paths
                     newDebugInfo.AddRange(toSim.SimulationHistoryDebugInformation);
 
+                    // see nodes considered by A*
+                    Graph.ShowNodes(newDebugInfo, this.graph);
                     // see path created by A*
-                    PathFinder.ShowPath(newDebugInfo, this.path);
+                    this.graph.showAllKnownPaths(newDebugInfo);
+                    
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)

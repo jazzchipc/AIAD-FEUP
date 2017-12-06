@@ -126,5 +126,57 @@ namespace GeometryFriendsAgents
                 }
             }
         }
+
+        public static void resetNumberOfNodes()
+        {
+            numberOfNodes = 0;
+        }
+
+        public override bool Equals(System.Object obj)
+        {
+            // If parameter is null return false.
+            if (obj == null)
+            {
+                return false;
+            }
+
+            // If parameter cannot be cast to Point return false.
+            Node n = obj as Node;
+            if (n == null)
+            {
+                return false;
+            }
+
+            return Equals(n);
+
+        }
+
+        public bool Equals(Node n)
+        {
+            // If parameter is null return false:
+            if (n == null)
+            {
+                return false;
+            }
+
+            // Return false if the fields don't match:
+            if (this.location.X != n.location.X || this.location.Y != n.location.Y)
+            {
+                return false;
+            }
+
+            if(this.type != n.type)
+            {
+                return false;
+            }
+
+            return true;
+
+        }
+
+        public override int GetHashCode()
+        {
+            return location.X ^ location.Y;
+        }
     }
 }
