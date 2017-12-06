@@ -8,9 +8,6 @@ using System.Linq;
 
 namespace GeometryFriendsAgents
 {
-    // Using http://blog.two-cats.com/2014/06/a-star-example/ tutorial
-
-
     /// <summary>
     /// Defines the parameters which will be used to find a path across a section of the map
     /// </summary>
@@ -32,6 +29,12 @@ namespace GeometryFriendsAgents
     public class PathFinder
     {
         private SearchParameters searchParameters;
+    
+        public void setSearchParameteres(SearchParameters searchParameters)
+        {
+            this.searchParameters = searchParameters;
+        }
+
         public AgentType agentType;
 
         List<Node> openSet;
@@ -51,10 +54,10 @@ namespace GeometryFriendsAgents
         /// Attempts to find a path from the start location to the end location based on the supplied SearchParameters
         /// </summary>
         /// <returns>A List of Points representing the path. If no path was found, the returned list is empty.</returns>
-        public List<Point> FindPath()
+        public List<Node> FindPath()
         {
             // The start node is the first entry in the 'open' list
-            List<Point> path = new List<Point>();
+            List<Node> path = new List<Node>();
             bool success = this.Search();
             if (success)
             {
@@ -63,17 +66,19 @@ namespace GeometryFriendsAgents
 
                 while (node.parentNode != null)
                 {
-                    path.Add(node.location);
+                    path.Add(node);
                     node = node.parentNode;
                 }
 
-                path.Add(node.location); // add starting node
+                path.Add(node); // add starting node
 
                 // Reverse the list so it's in the correct order when returned
                 path.Reverse();
+
+                return path;
             }
 
-            return path;
+            return null;
         }
 
         /// <summary>
@@ -99,9 +104,6 @@ namespace GeometryFriendsAgents
 
             while(openSet.Count > 0)
             {
-                System.Diagnostics.Debug.WriteLine("Open Set: " + openSet.Count + " nodes.");
-                System.Diagnostics.Debug.WriteLine("Closed Set: " + closedSet.Count + " nodes.");
-
                 // order openSet by fCost
                 openSet.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
 
@@ -153,17 +155,7 @@ namespace GeometryFriendsAgents
             // The method returns false if this path leads to be a dead end
             return false;
         }
-
-        /// <summary>
-        /// Displays the map and path as a simple grid to the game with a yellow line
-        /// </summary>
-        public static void ShowPath(List<DebugInformation> agentDebugList, List<Point> path)
-        {
-            for(int i = 0; i < path.Count - 1; i++)
-            {
-                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i], path[i+1], GeometryFriends.XNAStub.Color.Yellow));
-            }
-        }
+               
     }
 
 }

@@ -19,6 +19,9 @@ namespace GeometryFriendsAgents
         public Node circleNode { get; private set; }
         public List<Node> diamondNodes { get; private set; }
 
+        // Known paths
+        public List<List<Node>> knownPaths;
+
         public Graph(AgentType agentType, Matrix matrix)
         {
             this.nodes = new Dictionary<int, Node>();
@@ -26,6 +29,7 @@ namespace GeometryFriendsAgents
             this.matrix = matrix;
 
             this.diamondNodes = new List<Node>();
+            this.knownPaths = new List<List<Node>>();
         }
 
         public void addNode(Node node)
@@ -194,6 +198,25 @@ namespace GeometryFriendsAgents
                     Node node = new Node(currentCorner.X, currentCorner.Y, obstacleType);
                     this.addNode(node);
                 }
+            }
+        }
+
+        public void showAllKnownPaths(List<DebugInformation> agentDebugList)
+        {
+            for(int i = 0; i < this.knownPaths.Count; i++)
+            {
+                showPath(agentDebugList, this.knownPaths[i]);
+            }
+        }
+
+        /// <summary>
+        /// Displays the map and path as a simple grid to the game with a yellow line
+        /// </summary>
+        public static void showPath(List<DebugInformation> agentDebugList, List<Node> path)
+        {
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i].location, path[i + 1].location, GeometryFriends.XNAStub.Color.Yellow));
             }
         }
 
