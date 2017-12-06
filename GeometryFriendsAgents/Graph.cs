@@ -9,10 +9,19 @@ namespace GeometryFriendsAgents
     {
         private Dictionary<int, Node> nodes;  // associate a node with its index
         private bool[,] adjacencyMatrix;  // [i,j] tells you if node i is connected to node j
+        private AgentType agentType;
 
-        public Graph()
+        // Nodes list
+        public Node rectangleNode { get; private set; }
+        public Node circleNode { get; private set; }
+        public List<Node> diamondNodes { get; private set; }
+
+        public Graph(AgentType agentType)
         {
             this.nodes = new Dictionary<int, Node>();
+            this.agentType = agentType;
+
+            this.diamondNodes = new List<Node>();
         }
 
         public void addNode(Node node)
@@ -54,9 +63,11 @@ namespace GeometryFriendsAgents
 
             Node rectangle = new Node(rectangleX, rectangleY, Node.Type.Rectangle);
             this.addNode(rectangle);
+            this.rectangleNode = rectangle;
 
             Node circle = new Node(circleX, circleY, Node.Type.Circle);
             this.addNode(circle);
+            this.circleNode = circle;
 
             // OBSTACLE
             for (int i = 0; i < oI.Length; i++)
@@ -92,6 +103,7 @@ namespace GeometryFriendsAgents
 
                 Node diamondNode = new Node((int)diamond.X, (int)diamond.Y, Node.Type.Diamond);
                 this.addNode(diamondNode);
+                this.diamondNodes.Add(diamondNode);
             }
         }
 
@@ -113,7 +125,7 @@ namespace GeometryFriendsAgents
                         continue;
                     }
 
-                    if(matrix.openSpace(this.nodes[i].location, this.nodes[j].location))
+                    if(matrix.walkableLine(this.nodes[i].location, this.nodes[j].location, this.agentType))
                     {
                         this.adjacencyMatrix[i, j] = true;
                     }

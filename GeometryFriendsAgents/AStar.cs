@@ -22,16 +22,15 @@ namespace GeometryFriendsAgents
 
         public Graph graph;
 
-        public SearchParameters(Node startNode, Node goalNode, Graph graph)
+        public SearchParameters(int startNodeIndex, int endNodeIndex, Graph graph)
         {
-            this.startNode = startNode;
-            this.endNode = endNode;
             this.graph = graph;
+            this.startNode = graph.getNode(startNodeIndex);
+            this.endNode = graph.getNode(endNodeIndex);
         }
     }
     public class PathFinder
     {
-        private Graph graph;
         private SearchParameters searchParameters;
         public AgentType agentType;
 
@@ -42,9 +41,8 @@ namespace GeometryFriendsAgents
         /// Create a new instance of PathFinder
         /// </summary>
         /// <param name="searchParameters"></param>
-        public PathFinder(Graph graph, SearchParameters searchParameters, AgentType agentType)
+        public PathFinder(SearchParameters searchParameters, AgentType agentType)
         {
-            this.graph = graph;
             this.searchParameters = searchParameters;
             this.agentType = agentType;
         }
@@ -62,11 +60,14 @@ namespace GeometryFriendsAgents
             {
                 // If a path was found, follow the parents from the end node to build a list of locations
                 Node node = this.searchParameters.endNode;
+
                 while (node.parentNode != null)
                 {
                     path.Add(node.location);
                     node = node.parentNode;
                 }
+
+                path.Add(node.location); // add starting node
 
                 // Reverse the list so it's in the correct order when returned
                 path.Reverse();
@@ -116,7 +117,7 @@ namespace GeometryFriendsAgents
                 openSet.Remove(current);
                 closedSet.Add(current);
 
-                List<Node> nextNodes = this.graph.getAdjacentNodes(current.index);
+                List<Node> nextNodes = this.searchParameters.graph.getAdjacentNodes(current.index);
 
                 // Sort by F-value so that the shortest possible routes are considered first
                 nextNodes.Sort((node1, node2) => node1.fCost.CompareTo(node2.fCost));
@@ -136,7 +137,7 @@ namespace GeometryFriendsAgents
 
  
                     float traversalCost = Utils.GetTraversalCost(current.location, nextNode.location);
-                    float tentativeGCost = nextNode.gCost + traversalCost;
+                    float tentativeGCost = current.gCost + traversalCost;
 
                     if (tentativeGCost < nextNode.gCost)
                     {

@@ -132,11 +132,25 @@ namespace GeometryFriendsAgents
             this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
 
             // create node graph
-            this.graph = new Graph();
+            this.graph = new Graph(AgentType.Circle);
             this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
             this.graph.generateAdjacencyMatrix(this.matrix);
 
+            // TODO: make adjacency depend on the type of agent and use 'isWalkable()'
             this.graph.printAdjacency();
+
+            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[0].index, this.graph);
+            PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
+            this.path = pathFinder.FindPath();
+
+            if(this.path.Count <= 0)
+            {
+                System.Diagnostics.Debug.WriteLine("A* did not find a path.");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("A* found a path.");
+            }
 
             DebugSensorsInfo();
         }
@@ -292,6 +306,10 @@ namespace GeometryFriendsAgents
                     newDebugInfo.Add(DebugInformationFactory.CreateClearDebugInfo());
                     //add all the simulator generated debug information about circle/rectangle predicted paths
                     newDebugInfo.AddRange(toSim.SimulationHistoryDebugInformation);
+
+                    // see path created by A*
+                    PathFinder.ShowPath(newDebugInfo, this.path);
+
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)
                     {
