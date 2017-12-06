@@ -20,7 +20,8 @@ namespace GeometryFriendsAgents
         public List<Node> diamondNodes { get; private set; }
 
         // Known paths
-        public List<List<Node>> knownPaths;
+        public List<Path> knownPaths;
+        public List<float> knownCosts;
 
         public Graph(AgentType agentType, Matrix matrix)
         {
@@ -29,7 +30,7 @@ namespace GeometryFriendsAgents
             this.matrix = matrix;
 
             this.diamondNodes = new List<Node>();
-            this.knownPaths = new List<List<Node>>();
+            this.knownPaths = new List<Path>();
 
             Node.resetNumberOfNodes();
         }
@@ -207,7 +208,7 @@ namespace GeometryFriendsAgents
         {
             for(int i = 0; i < this.knownPaths.Count; i++)
             {
-                showPath(agentDebugList, this.knownPaths[i]);
+                showPath(agentDebugList, this.knownPaths[i].path);
             }
         }
 
@@ -222,5 +223,27 @@ namespace GeometryFriendsAgents
             }
         }
 
+    }
+
+    public class Path
+    {
+        public float cost { private set; get; }
+        public List<Node> path { private set; get; }
+
+        public Path(List<Node> path, float cost)
+        {
+            this.path = path;
+            this.cost = cost;
+        }
+
+        public Node getStartNode()
+        {
+            return path[0];
+        }
+
+        public Node getGoalNode()
+        {
+            return path[path.Count - 1];
+        }
     }
 }

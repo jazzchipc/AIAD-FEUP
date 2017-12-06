@@ -138,7 +138,7 @@ namespace GeometryFriendsAgents
             {
                 SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[i].index, this.graph);
                 PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
-                List<Node> knownPath = pathFinder.FindPath();
+                Path knownPath = pathFinder.FindPath();
                 if (knownPath != null)
                 {
                     System.Diagnostics.Debug.WriteLine("A* found a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");

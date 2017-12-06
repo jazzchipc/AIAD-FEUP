@@ -54,10 +54,11 @@ namespace GeometryFriendsAgents
         /// Attempts to find a path from the start location to the end location based on the supplied SearchParameters
         /// </summary>
         /// <returns>A List of Points representing the path. If no path was found, the returned list is empty.</returns>
-        public List<Node> FindPath()
+        public Path FindPath()
         {
             // The start node is the first entry in the 'open' list
-            List<Node> path = new List<Node>();
+            List<Node> nodes = new List<Node>();
+            float cost = 0;
             bool success = this.Search();
             if (success)
             {
@@ -66,14 +67,18 @@ namespace GeometryFriendsAgents
 
                 while (node.parentNode != null)
                 {
-                    path.Add(node);
+                    nodes.Add(node);
+                    cost = cost + Utils.GetTraversalCost(node.location, node.parentNode.location);
+
                     node = node.parentNode;
                 }
 
-                path.Add(node); // add starting node
-
+                nodes.Add(node); // add starting node
+                
                 // Reverse the list so it's in the correct order when returned
-                path.Reverse();
+                nodes.Reverse();
+
+                Path path = new Path(nodes, cost);
 
                 return path;
             }
