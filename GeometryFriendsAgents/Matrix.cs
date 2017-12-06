@@ -10,7 +10,7 @@ namespace GeometryFriendsAgents
 
         public int getWidth()
         {
-            return this.pixels.Length;
+            return this.pixels.GetLength(0);
         }
 
         public int getHeight()
@@ -43,7 +43,7 @@ namespace GeometryFriendsAgents
 
         public static Matrix generateMatrixFomGameInfo(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
-            Matrix matrix = new Matrix(area.Width, area.Height);
+            Matrix matrix = new Matrix(area.Width + 1, area.Height + 1);
 
             int rectangleX = (int)rI.X;
             int rectangleY = (int)rI.Y;
@@ -58,7 +58,7 @@ namespace GeometryFriendsAgents
             {
                 for (int y = rectangleY - 10 / 2; y < rectangleY + 10 / 2; y++)
                 {
-                    if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                    if (!matrix.inBounds(x, y)) // x and y out of bounds
                     {
                         continue;
                     }
@@ -74,7 +74,7 @@ namespace GeometryFriendsAgents
             {
                 for (int y = circleY - circleRadius / 2; y < circleY + circleRadius / 2; y++)
                 {
-                    if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                    if (!matrix.inBounds(x,y)) // x and y out of bounds
                     {
                         continue;
                     }
@@ -94,7 +94,7 @@ namespace GeometryFriendsAgents
                 {
                     for (int y = (int)(obstacle.Y - obstacle.Height / 2); y < (int)(obstacle.Y + obstacle.Height / 2); y++)
                     {
-                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        if (!matrix.inBounds(x, y)) // x and y out of bounds
                         {
                             continue;
                         }
@@ -115,7 +115,7 @@ namespace GeometryFriendsAgents
                 {
                     for (int y = (int)(circlePlatform.Y - circlePlatform.Height / 2); y < (int)(circlePlatform.Y + circlePlatform.Height / 2); y++)
                     {
-                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        if (!matrix.inBounds(x, y)) // x and y out of bounds
                         {
                             continue;
                         }
@@ -136,7 +136,7 @@ namespace GeometryFriendsAgents
                 {
                     for (int y = (int)(rectanglePlatform.Y - rectanglePlatform.Height / 2); y < (int)(rectanglePlatform.Y + rectanglePlatform.Height / 2); y++)
                     {
-                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        if (!matrix.inBounds(x, y)) // x and y out of bounds
                         {
                             continue;
                         }
@@ -158,7 +158,7 @@ namespace GeometryFriendsAgents
                 {
                     for (int y = (int)(diamond.Y - diamondWidth / 2); y < (int)(diamond.Y + diamondWidth / 2); y++)
                     {
-                        if (x >= matrix.getWidth() || y >= matrix.getHeight() || x < 0 || y < 0) // x and y out of bounds
+                        if (!matrix.inBounds(x, y)) // x and y out of bounds
                         {
                             continue;
                         }
@@ -184,22 +184,63 @@ namespace GeometryFriendsAgents
             int deltaX = endPoint.X - beginPoint.X;
             int deltaY = endPoint.Y - beginPoint.Y;
 
-            float m = deltaY / deltaX;
-
-            for(int x = beginPoint.X; x < endPoint.X; x++)
+            if (deltaX != 0)
             {
-                float currentY = m * x + beginPoint.Y;
+                float m = deltaY / deltaX;
+                int signX = Math.Sign(deltaX);
 
-                // since the line is not really straight, we must for more than one point and use a 'wide' line
-                if (!this.pixels[x, (int)Math.Floor(currentY)].isWalkable(agentType) || 
-                    !this.pixels[x, (int)Math.Ceiling(currentY)].isWalkable(agentType))   
+                for (int x = 0; x < Math.Abs(deltaX); x++)
                 {
-                    return false;
+                    int stepX = x * signX;
+                    float currentY = m * stepX + beginPoint.Y;
+                    int currentYFloor = (int)Math.Floor(currentY);
+                    int currentYCeiling = (int)Math.Ceiling(currentY);
+
+                    int currentX = beginPoint.X + stepX;
+
+                    if (!xInBounds(currentX) || !this.yInBounds(currentYFloor) || !yInBounds(currentYCeiling))
+                    {
+                        continue;
+                    }
+
+                    // since the line is not really straight, we must for more than one point and use a 'wide' line
+                    if (!this.pixels[currentX, (int)Math.Floor(currentY)].isWalkable(agentType) ||
+                        !this.pixels[currentX, (int)Math.Ceiling(currentY)].isWalkable(agentType))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                int signY = Math.Sign(deltaY);
+
+                for (int y = 0; y < Math.Abs(deltaY); y++)
+                {
+                    int trueY = beginPoint.Y + (y * signY);
+
+                    // since the line is not really straight, we must for more than one point and use a 'wide' line
+                    if (!this.pixels[beginPoint.X, trueY].isWalkable(agentType))
+                    {
+                        return false;
+                    }
                 }
             }
             return true;
         }
+        public bool xInBounds(int x)
+        {
+            return (x < this.getWidth() && x > 0);
+        }
+
+        public bool yInBounds(int y)
+        {
+            return (y < this.getHeight() && y > 0);
+        }
+
+        public bool inBounds(int x, int y)
+        {
+            return (xInBounds(x) && yInBounds(y));
+        }
     }
-
-
 }
