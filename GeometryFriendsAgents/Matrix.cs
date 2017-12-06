@@ -179,7 +179,7 @@ namespace GeometryFriendsAgents
         /// <param name="beginPoint"></param>
         /// <param name="endPoint"></param>
         /// <returns></returns>
-        public bool openSpace(Point beginPoint, Point endPoint)
+        public bool walkableLine(Point beginPoint, Point endPoint, AgentType agentType)
         {
             int deltaX = endPoint.X - beginPoint.X;
             int deltaY = endPoint.Y - beginPoint.Y;
@@ -190,9 +190,9 @@ namespace GeometryFriendsAgents
             {
                 float currentY = m * x + beginPoint.Y;
 
-                // since the line is not really straight, we must for more than one point
-                if (this.pixels[x, (int)Math.Floor(currentY)].type != Pixel.Type.Space || 
-                    this.pixels[x, (int)Math.Ceiling(currentY)].type != Pixel.Type.Space)   
+                // since the line is not really straight, we must for more than one point and use a 'wide' line
+                if (!this.pixels[x, (int)Math.Floor(currentY)].isWalkable(agentType) || 
+                    !this.pixels[x, (int)Math.Ceiling(currentY)].isWalkable(agentType))   
                 {
                     return false;
                 }

@@ -1,3 +1,4 @@
+using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,10 +9,19 @@ namespace GeometryFriendsAgents
     {
         private Dictionary<int, Node> nodes;  // associate a node with its index
         private bool[,] adjacencyMatrix;  // [i,j] tells you if node i is connected to node j
+        private AgentType agentType;
 
-        public Graph()
+        // Nodes list
+        public Node rectangleNode { get; private set; }
+        public Node circleNode { get; private set; }
+        public List<Node> diamondNodes { get; private set; }
+
+        public Graph(AgentType agentType)
         {
             this.nodes = new Dictionary<int, Node>();
+            this.agentType = agentType;
+
+            this.diamondNodes = new List<Node>();
         }
 
         public void addNode(Node node)
@@ -43,6 +53,60 @@ namespace GeometryFriendsAgents
             return adjacentNodes;
         }
 
+        public void generateNodes(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI)
+        {
+            int rectangleX = (int)rI.X;
+            int rectangleY = (int)rI.Y;
+
+            int circleX = (int)cI.X;
+            int circleY = (int)cI.Y;
+
+            Node rectangle = new Node(rectangleX, rectangleY, Node.Type.Rectangle);
+            this.addNode(rectangle);
+            this.rectangleNode = rectangle;
+
+            Node circle = new Node(circleX, circleY, Node.Type.Circle);
+            this.addNode(circle);
+            this.circleNode = circle;
+
+            // OBSTACLE
+            for (int i = 0; i < oI.Length; i++)
+            {
+                ObstacleRepresentation obstacle = oI[i];
+
+                Node obstacleNode = new Node((int)obstacle.X, (int)obstacle.Y, Node.Type.Obstacle);
+                this.addNode(obstacleNode);
+            }
+
+            // CIRCLE PLATFORM
+            for (int i = 0; i < cPI.Length; i++)
+            {
+                ObstacleRepresentation circlePlatform = cPI[i];
+
+                Node circlePlatformNode = new Node((int)circlePlatform.X, (int)circlePlatform.Y, Node.Type.CirclePlatform);
+                this.addNode(circlePlatformNode);
+            }
+
+            // RECTANGLE PLATFORM
+            for (int i = 0; i < rPI.Length; i++)
+            {
+                ObstacleRepresentation rectanglePlatform = rPI[i];
+
+                Node rectanglePlatformNode = new Node((int)rectanglePlatform.X, (int)rectanglePlatform.Y, Node.Type.RectanglePlatform);
+                this.addNode(rectanglePlatformNode);
+            }
+
+            // DIAMONDS
+            for (int i = 0; i < colI.Length; i++)
+            {
+                CollectibleRepresentation diamond = colI[i];
+
+                Node diamondNode = new Node((int)diamond.X, (int)diamond.Y, Node.Type.Diamond);
+                this.addNode(diamondNode);
+                this.diamondNodes.Add(diamondNode);
+            }
+        }
+
         public void generateAdjacencyMatrix(Matrix matrix)
         {
             if(this.nodes == null)
@@ -56,7 +120,12 @@ namespace GeometryFriendsAgents
             {
                 for(int j = 0; j < this.nodes.Count; j++)
                 {
-                    if(matrix.openSpace(this.nodes[i].location, this.nodes[j].location))
+                    if(i == j)
+                    {
+                        continue;
+                    }
+
+                    if(matrix.walkableLine(this.nodes[i].location, this.nodes[j].location, this.agentType))
                     {
                         this.adjacencyMatrix[i, j] = true;
                     }
@@ -65,6 +134,18 @@ namespace GeometryFriendsAgents
                         this.adjacencyMatrix[i, j] = false;
                     }
                 }
+            }
+        }
+
+        public void printAdjacency()
+        {
+            for (int i = 0; i < this.adjacencyMatrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < this.adjacencyMatrix.GetLength(1); j++)
+                {
+                    System.Diagnostics.Debug.Write(this.adjacencyMatrix[i, j] + "\t");
+                }
+                System.Diagnostics.Debug.WriteLine("");
             }
         }
         
