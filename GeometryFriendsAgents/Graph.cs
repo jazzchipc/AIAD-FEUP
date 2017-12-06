@@ -1,3 +1,4 @@
+using GeometryFriends.AI.Debug;
 using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
@@ -122,10 +123,9 @@ namespace GeometryFriendsAgents
                 {
                     if(i == j)
                     {
-                        continue;
+                        this.adjacencyMatrix[i, j] = false;
                     }
-
-                    if(matrix.walkableLine(this.nodes[i].location, this.nodes[j].location, this.agentType))
+                    else if(matrix.walkableLine(this.nodes[i].location, this.nodes[j].location, this.agentType))
                     {
                         this.adjacencyMatrix[i, j] = true;
                     }
@@ -148,6 +148,22 @@ namespace GeometryFriendsAgents
                 System.Diagnostics.Debug.WriteLine("");
             }
         }
-        
+
+        /// <summary>
+        /// Highlights all the nodes in the map
+        /// </summary>
+        public static void ShowNodes(List<DebugInformation> agentDebugList, Graph graph)
+        {
+            int nodeDebugRadius = 20;
+           
+            for (int i = 0; i < graph.nodes.Count - 1; i++)
+            {
+                Node currentNode = graph.nodes[i];
+                Point nodeDebugLocation = new Point(currentNode.location.X - (int)(nodeDebugRadius / 2), currentNode.location.Y - (int)(nodeDebugRadius / 2));
+
+                agentDebugList.Add(DebugInformationFactory.CreateCircleDebugInfo(nodeDebugLocation, nodeDebugRadius, GeometryFriends.XNAStub.Color.Red));
+            }
+        }
+
     }
 }

@@ -139,7 +139,7 @@ namespace GeometryFriendsAgents
             // TODO: make adjacency depend on the type of agent and use 'isWalkable()'
             this.graph.printAdjacency();
 
-            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[0].index, this.graph);
+            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[1].index, this.graph);
             PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
             this.path = pathFinder.FindPath();
 
@@ -307,8 +307,11 @@ namespace GeometryFriendsAgents
                     //add all the simulator generated debug information about circle/rectangle predicted paths
                     newDebugInfo.AddRange(toSim.SimulationHistoryDebugInformation);
 
+                    // see nodes considered by A*
+                    Graph.ShowNodes(newDebugInfo, this.graph);
                     // see path created by A*
                     PathFinder.ShowPath(newDebugInfo, this.path);
+                    
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)

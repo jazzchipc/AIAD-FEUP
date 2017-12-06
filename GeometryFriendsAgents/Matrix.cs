@@ -186,7 +186,7 @@ namespace GeometryFriendsAgents
 
             if (deltaX != 0)
             {
-                float m = deltaY / deltaX;
+                float m = (float)deltaY / (float)deltaX;
                 int signX = Math.Sign(deltaX);
 
                 for (int x = 0; x < Math.Abs(deltaX); x++)
