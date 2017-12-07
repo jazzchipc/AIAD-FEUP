@@ -55,6 +55,7 @@ namespace GeometryFriendsAgents
         private Rectangle area;
 
         //Custom settings
+        AgentType type = AgentType.Circle;
         int iterationCount = 0;
         int moveStep = 4;
 
@@ -126,30 +127,8 @@ namespace GeometryFriendsAgents
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
-            // create game matrix
-            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
-
-            // create node graph
-            this.graph = new Graph(AgentType.Circle, this.matrix);
-            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
-            this.graph.generateAdjacencyMatrix(this.matrix);
+            this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
             
-            for(int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
-            {
-                SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[i].index, this.graph);
-                PathFinder pathFinder = new PathFinder(searchParameters, AgentType.Circle);
-                Path knownPath = pathFinder.FindPath();
-                if (knownPath != null)
-                {
-                    System.Diagnostics.Debug.WriteLine("A* found a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
-                    this.graph.knownPaths.Add(knownPath);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("A* did NOT find a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
-                }
-            }
-
             DebugSensorsInfo();
         }
 
@@ -308,7 +287,7 @@ namespace GeometryFriendsAgents
                     // see nodes considered by A*
                     Graph.ShowNodes(newDebugInfo, this.graph);
                     // see path created by A*
-                    this.graph.showAllKnownPaths(newDebugInfo);
+                    this.graph.showAllKnownPaths(newDebugInfo, this.type);
                     
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
@@ -398,6 +377,37 @@ namespace GeometryFriendsAgents
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Generates matrix describing the level and runs A star to find paths to every diamond
+        /// </summary>
+        private void runAStar(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
+        {
+            // create game matrix
+            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
+
+            // create node graph
+            this.graph = new Graph(this.type, this.matrix);
+            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
+            this.graph.generateAdjacencyMatrix(this.matrix);
+
+            for (int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
+            {
+                SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[i].index, this.graph);
+                PathFinder pathFinder = new PathFinder(searchParameters, this.type);
+                Path knownPath = pathFinder.FindPath();
+                if (knownPath != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("A* found a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
+                    this.graph.knownPaths.Add(knownPath);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("A* did NOT find a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
+                }
+            }
+
         }
 
         /**

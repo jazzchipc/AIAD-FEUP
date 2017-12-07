@@ -1,6 +1,7 @@
 ﻿using GeometryFriends;
 using GeometryFriends.AI;
 using GeometryFriends.AI.Communication;
+using GeometryFriends.AI.Debug;
 using GeometryFriends.AI.Interfaces;
 using GeometryFriends.AI.Perceptions.Information;
 using System;
@@ -40,7 +41,16 @@ namespace GeometryFriendsAgents
 
         //Area of the game screen
         protected Rectangle area;
-        
+
+        //Debug
+        DebugInformation[] debugInfo = null;
+
+        //Custom settings
+        AgentType type = AgentType.Rectangle;
+
+        Matrix matrix;
+        Graph graph;
+
         public RectangleAgent()
         {
             //Change flag if agent is not to be used
@@ -77,6 +87,8 @@ namespace GeometryFriendsAgents
 
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
             messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.BlanchedAlmond)));
+
+            this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
             //DebugSensorsInfo();
         }
@@ -143,6 +155,21 @@ namespace GeometryFriendsAgents
                 else
                     lastMoveTime = 60;
             }
+
+            //prepare all the debug information to be passed to the agents manager
+            List<DebugInformation> newDebugInfo = new List<DebugInformation>();
+
+            // see nodes considered by A*
+            Graph.ShowNodes(newDebugInfo, this.graph);
+            // see path created by A*
+            this.graph.showAllKnownPaths(newDebugInfo, this.type);
+
+            //List<DebugInformation> debug = new List<DebugInformation>();
+            //debug.AddRange(this.debugInfo);
+            //debug.AddRange(newDebugInfo.ToArray());
+
+            this.debugInfo = newDebugInfo.ToArray();
+
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
@@ -210,6 +237,45 @@ namespace GeometryFriendsAgents
                 }
 
             }
+        }
+
+        //implements abstract circle interface: gets the debug information that is to be visually represented by the agents manager
+        public override DebugInformation[] GetDebugInformation()
+        {
+            return debugInfo;
+        }
+
+
+
+        /// <summary>
+        /// Generates matrix describing the level and runs A star to find paths to every diamond
+        /// </summary>
+        private void runAStar(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
+        {
+            // create game matrix
+            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
+
+            // create node graph
+            this.graph = new Graph(this.type, this.matrix);
+            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
+            this.graph.generateAdjacencyMatrix(this.matrix);
+
+            for (int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
+            {
+                SearchParameters searchParameters = new SearchParameters(this.graph.rectangleNode.index, this.graph.diamondNodes[i].index, this.graph);
+                PathFinder pathFinder = new PathFinder(searchParameters, this.type);
+                Path knownPath = pathFinder.FindPath();
+                if (knownPath != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("A* found a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
+                    this.graph.knownPaths.Add(knownPath);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("A* did NOT find a path between: [" + searchParameters.startNode + " and " + searchParameters.endNode + ".");
+                }
+            }
+
         }
 
         /// <summary>
