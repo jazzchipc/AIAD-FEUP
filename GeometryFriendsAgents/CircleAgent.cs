@@ -66,6 +66,8 @@ namespace GeometryFriendsAgents
         //Status tracking
         Status agentStatus;
 
+        private bool Jumping = false;
+
         public CircleAgent()
         {
             //Change flag if agent is not to be used
@@ -192,7 +194,6 @@ namespace GeometryFriendsAgents
             //Update Status
             CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
             RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
-            this.agentStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle);
 
             if (this.collectiblesInfo.Length <= 0)
             {
@@ -200,8 +201,11 @@ namespace GeometryFriendsAgents
             }
             else
             {
+                this.agentStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle);
+
                 //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
-                currentAction = this.JumpOntoRectangle();
+                //currentAction = this.JumpOntoRectangle();
+                currentAction = this.Launch();
             }
 
             //send a message to the rectangle agent telling what action it chose
@@ -588,12 +592,12 @@ namespace GeometryFriendsAgents
                 }
             }
 
+            Log.LogInformation("JUMP_ONTO");
             Log.LogInformation(statusCircle.ToString());
             Log.LogInformation(move.ToString());
             return move;
         }
 
-        //TODO
         private Moves JumpOntoRectangle()
         {
             Moves move = Moves.NO_ACTION;
@@ -602,6 +606,95 @@ namespace GeometryFriendsAgents
                 Utils.getRectangleWidth(rectangleInfo.Height), rectangleInfo.Height);
 
             return JumpOnto(rectangle);
+        }
+
+        private Moves HoldGround()
+        {
+            Moves move = Moves.NO_ACTION;
+
+            if(this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
+            {
+                move = Moves.ROLL_RIGHT;
+            }
+            else if(this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
+            {
+                move = Moves.ROLL_LEFT;
+            }
+
+            Log.LogInformation("HOLD_GROUND");
+            Log.LogInformation(this.agentStatus.ToString());
+            Log.LogInformation(move.ToString());
+            return move;
+        }
+
+        private Moves Launch()
+        {
+            Moves move = Moves.NO_ACTION;
+            if (this.predictor != null)
+            {
+                ActionSimulator sim = predictor;
+                sim.Update(1);
+
+                //TODO NAO e preciso esta treta toda dos status
+                CircleRepresentation circle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
+                    sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
+                RectangleRepresentation rectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
+                    sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
+                ObstacleRepresentation dummy = new ObstacleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
+                    Utils.getRectangleWidth(sim.RectangleHeight), sim.RectangleHeight);
+
+                Status futureCircle = new Status();
+                futureCircle.Update(circle, rectangle, dummy, AgentType.Circle);
+
+
+                if(this.Jumping)
+                {
+                    if (this.rectangleInfo.Height > 160) //When almost fully morphed up, circle jumps
+                    {
+                        Log.LogInformation("REHEARSAL: Jumping!");
+                        move = Moves.JUMP;
+                        SendRequest(new Request(new Command.MorphUp()));
+                        this.Jumping = false; //Already ended the jump
+                    }
+                    else //while rectangle not yet all morphed up
+                    {
+                        Log.LogInformation("REHEARSAL: Beginning the launch!");
+                        move = Moves.NO_ACTION;
+                        SendRequest(new Request(new Command.MorphUp()));
+                    }
+                }
+                else
+                {
+                    if (this.agentStatus.ABOVE_OTHER_AGENT == Utils.Quantifier.SLIGHTLY &&
+                    this.agentStatus.LEFT_FROM_OTHER_AGENT == Utils.Quantifier.NONE &&
+                    this.agentStatus.RIGHT_FROM_OTHER_AGENT == Utils.Quantifier.NONE &&
+                    this.agentStatus.NEAR_OTHER_AGENT) //Ready to jump
+                    {
+                        if (this.agentStatus.MOVING)
+                        {
+                            Log.LogInformation("REHEARSAL: Still moving on top of rectangle");
+                            move = HoldGround();
+                            SendRequest(new Request(new Command.MorphDown()));
+                        }
+                        else //Prepare to jump
+                        {
+                            Log.LogInformation("REHEARSAL: Stopped, and activating launch sequence");
+                            this.Jumping = true;
+                            move = Moves.NO_ACTION;
+                            SendRequest(new Request(new Command.MorphUp()));
+                        }
+                    }
+                    else //Position himself on top of the rectangle
+                    {
+                        Log.LogInformation("REHEARSAL: Jumping onto Rectangle");
+                        move = JumpOntoRectangle();
+                        SendRequest(new Request(new Command.MorphDown()));
+                    }
+                }
+
+            }
+
+            return move;
         }
 
         public void SendRectangleToPosition(float x, float rectanglePredictedPositionX)
