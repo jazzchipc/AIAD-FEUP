@@ -21,7 +21,6 @@ namespace GeometryFriendsAgents
 
         // Known paths
         public List<Path> knownPaths;
-        public List<float> knownCosts;
 
         public Graph(AgentType agentType, Matrix matrix)
         {
@@ -240,13 +239,13 @@ namespace GeometryFriendsAgents
 
     public class Path
     {
-        public float cost { private set; get; }
+        public float totalCost { private set; get; }
         public List<Node> path { private set; get; }
 
-        public Path(List<Node> path, float cost)
+        public Path(List<Node> path, float totalCost)
         {
             this.path = path;
-            this.cost = cost;
+            this.totalCost = totalCost;
         }
 
         public Node getStartNode()
