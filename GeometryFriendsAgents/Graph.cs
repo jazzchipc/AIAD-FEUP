@@ -168,7 +168,9 @@ namespace GeometryFriendsAgents
                 Node currentNode = graph.nodes[i];
                 Point nodeDebugLocation = new Point(currentNode.location.X - (int)(nodeDebugRadius / 2), currentNode.location.Y - (int)(nodeDebugRadius / 2));
 
-                agentDebugList.Add(DebugInformationFactory.CreateCircleDebugInfo(nodeDebugLocation, nodeDebugRadius, GeometryFriends.XNAStub.Color.Red));
+                GeometryFriends.XNAStub.Color color = GeometryFriends.XNAStub.Color.Red;
+                
+                agentDebugList.Add(DebugInformationFactory.CreateCircleDebugInfo(nodeDebugLocation, nodeDebugRadius, color));
             }
         }
 
@@ -204,22 +206,33 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public void showAllKnownPaths(List<DebugInformation> agentDebugList)
+        public void showAllKnownPaths(List<DebugInformation> agentDebugList, AgentType agentType)
         {
             for(int i = 0; i < this.knownPaths.Count; i++)
             {
-                showPath(agentDebugList, this.knownPaths[i].path);
+                showPath(agentDebugList, this.knownPaths[i].path, agentType);
             }
         }
 
         /// <summary>
         /// Displays the map and path as a simple grid to the game with a yellow line
         /// </summary>
-        public static void showPath(List<DebugInformation> agentDebugList, List<Node> path)
+        public static void showPath(List<DebugInformation> agentDebugList, List<Node> path, AgentType agentType)
         {
+            GeometryFriends.XNAStub.Color color;
+
+            if(agentType == AgentType.Circle)
+            {
+                color = GeometryFriends.XNAStub.Color.Yellow;
+            }
+            else
+            {
+                color = GeometryFriends.XNAStub.Color.Blue;
+            }
+
             for (int i = 0; i < path.Count - 1; i++)
             {
-                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i].location, path[i + 1].location, GeometryFriends.XNAStub.Color.Yellow));
+                agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i].location, path[i + 1].location, color));
             }
         }
 
