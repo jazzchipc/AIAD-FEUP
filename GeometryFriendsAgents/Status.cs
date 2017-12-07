@@ -31,6 +31,7 @@ namespace GeometryFriendsAgents
         private Quantifier Moving_Right;
         private Quantifier Moving_Left;
         private Quantifier Moving_Towards_Target;
+        private Quantifier Moving_Up;
 
         private bool Blocked; //TODO When Agent is MOVING but his position doesn't change
         //TODO Implement Status Moving Fast, and Moving Slow OR Moving Direction
@@ -74,6 +75,7 @@ namespace GeometryFriendsAgents
         public Quantifier MOVING_LEFT { get => Moving_Left; set => Moving_Left = value; }
         public Quantifier MOVING_TOWARDS_TARGET { get => Moving_Towards_Target; set => Moving_Towards_Target = value; }
         public bool NEAR_TARGET { get => Near_Target; set => Near_Target = value; }
+        public Quantifier MOVING_UP { get => Moving_Up; set => Moving_Up = value; }
 
         //This function only cares for the current Agent
         
@@ -313,10 +315,10 @@ namespace GeometryFriendsAgents
             float minimum_distance_from_agent_centres_X = circle_radius + Utils.getRectangleWidth(rectangle_height)/2;
             float minimum_distance_from_agent_centres_Y = circle_radius + rectangle_height/2;
 
-            float agent2RightBound = agent2Xposition + minimum_distance_from_agent_centres_X; //Minimum distances between centres for the agents to be next to each other
-            float agent2LeftBound = agent2Xposition - minimum_distance_from_agent_centres_X;
-            float agent2UpperBound = agent2Yposition - minimum_distance_from_agent_centres_Y;
-            float agent2LowerBound = agent2Yposition + minimum_distance_from_agent_centres_Y;
+            float agent2RightBound = agent2Xposition + minimum_distance_from_agent_centres_X - penetration_margin; //Minimum distances between centres for the agents to be next to each other
+            float agent2LeftBound = agent2Xposition - minimum_distance_from_agent_centres_X + penetration_margin;
+            float agent2UpperBound = agent2Yposition - minimum_distance_from_agent_centres_Y + penetration_margin;
+            float agent2LowerBound = agent2Yposition + minimum_distance_from_agent_centres_Y - penetration_margin;
 
             //X Axis
             if (agent1Xposition > agent2RightBound)
@@ -405,7 +407,36 @@ namespace GeometryFriendsAgents
                 this.BELOW_OTHER_AGENT = Quantifier.NONE;
             }
 
-            this.NEAR_OTHER_AGENT = checkNear(new Quantifier[4] { this.ABOVE_OTHER_AGENT, this.BELOW_OTHER_AGENT, this.RIGHT_FROM_OTHER_AGENT, this.LEFT_FROM_OTHER_AGENT });        }
+            //Check Corners (using the agent centre)
+            if (this.ABOVE_OTHER_AGENT == Quantifier.NONE &&
+                this.BELOW_OTHER_AGENT == Quantifier.NONE &&
+                this.LEFT_FROM_OTHER_AGENT == Quantifier.NONE &&
+                this.RIGHT_FROM_OTHER_AGENT == Quantifier.NONE)
+            {
+                if (agent1Xposition <= agent2LeftBound)
+                {
+                    this.LEFT_FROM_OTHER_AGENT = Quantifier.SLIGHTLY;
+                }
+                if (agent1Xposition >= agent2RightBound)
+                {
+                    this.RIGHT_FROM_OTHER_AGENT = Quantifier.SLIGHTLY;
+                }
+                if (agent1Yposition <= agent2UpperBound)
+                {
+                    this.ABOVE_OTHER_AGENT = Quantifier.SLIGHTLY;
+                }
+                if (agent1Yposition >= agent2LowerBound)
+                {
+                    this.BELOW_OTHER_AGENT = Quantifier.SLIGHTLY;
+                }
+            }
+
+            this.NEAR_OTHER_AGENT = checkNear(new Quantifier[4] { this.ABOVE_OTHER_AGENT, this.BELOW_OTHER_AGENT, this.RIGHT_FROM_OTHER_AGENT, this.LEFT_FROM_OTHER_AGENT });
+
+            Log.LogInformation("Agent1 - " + "X:" + agent1Xposition + "|Y:" + agent1Yposition);
+            Log.LogInformation("Agent2Bounds - " + "L:" + agent2LeftBound + "|R:" + agent2RightBound + "|U:"
+                + agent2UpperBound + "|L:" + agent2LowerBound);
+        }
 
         private void checkMovement(float agent1Xvel, float agent1Yvel, float agent2Xvel, float agent2Yvel)
         {
@@ -420,7 +451,8 @@ namespace GeometryFriendsAgents
 
             if(agent1Xvel > 0)
             {
-                if(agent1Xvel > a_lot_speed)
+                this.MOVING_LEFT = Quantifier.NONE;
+                if (agent1Xvel > a_lot_speed)
                 {
                     this.MOVING_RIGHT = Quantifier.A_LOT;
                 }
@@ -436,12 +468,11 @@ namespace GeometryFriendsAgents
                 {
                     this.MOVING_RIGHT = Quantifier.NONE;
                 }
-                this.MOVING_LEFT = Quantifier.NONE;
-                this.MOVING = true;
             }
             else if(agent1Xvel < 0)
             {
-                if(agent1Xvel < -a_lot_speed)
+                this.MOVING_RIGHT = Quantifier.NONE;
+                if (agent1Xvel < -a_lot_speed)
                 {
                     this.MOVING_LEFT = Quantifier.A_LOT;
                 }
@@ -457,14 +488,40 @@ namespace GeometryFriendsAgents
                 {
                     this.MOVING_LEFT = Quantifier.NONE;
                 }
-                this.MOVING_RIGHT = Quantifier.NONE;
-                this.MOVING = true;
             }
             else
             {
                 this.MOVING_RIGHT = Quantifier.NONE;
                 this.MOVING_LEFT = Quantifier.NONE;
+            }
+
+
+            if(agent1Yvel < -a_lot_speed)
+            {
+                this.MOVING_UP = Quantifier.A_LOT;
+            }
+            else if(agent1Yvel < -a_bit_speed)
+            {
+                this.MOVING_UP = Quantifier.A_BIT;
+            }
+            else if(agent1Yvel < -slight_speed)
+            {
+                this.MOVING_UP = Quantifier.SLIGHTLY;
+            }
+            else
+            {
+                this.MOVING_UP = Quantifier.NONE;
+            }
+
+            if(this.MOVING_UP == Quantifier.NONE &&
+                this.MOVING_LEFT == Quantifier.NONE &&
+                this.MOVING_RIGHT == Quantifier.NONE)
+            {
                 this.MOVING = false;
+            }
+            else
+            {
+                this.MOVING = true;
             }
         }
 
@@ -535,8 +592,10 @@ namespace GeometryFriendsAgents
                 + "RECTANGLE_HEIGHT: " + rectangle_height.ToString() + " | "
                 + "OBSTACLE_MARGIN_X: " + obstacle_margin_X.ToString() + " | "
                 + "OBSTACLE_MARGIN_Y: " + obstacle_margin_Y.ToString() + " | "
+                + "MOVING: " + Moving.ToString() + " | "
                 + "MOVING LEFT: " + Moving_Left.ToString() + " | "
                 + "MOVING RIGHT: " + Moving_Right.ToString() + " | "
+                + "MOVING UP: " + Moving_Up.ToString() + " | "
                 + "MOVING TOWARDS TARGET: " + Moving_Towards_Target.ToString(); 
         }
 
