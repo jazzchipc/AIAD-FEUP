@@ -51,6 +51,10 @@ namespace GeometryFriendsAgents
         Matrix matrix;
         Graph graph;
 
+        // Diamond to get
+        int nextDiamondIndex;
+        Path nextDiamondPath;
+
         public RectangleAgent()
         {
             //Change flag if agent is not to be used
@@ -90,6 +94,9 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
+            //TODO: remove this
+            this.nextDiamondIndex = 0;
+
             //DebugSensorsInfo();
         }
               
@@ -101,6 +108,8 @@ namespace GeometryFriendsAgents
             rectangleInfo = rI;
             circleInfo = cI;
             collectiblesInfo = colI;
+
+            this.updateAStar(rI, cI);
         }
 
         //implements abstract rectangle interface: signals if the agent is actually implemented or not
@@ -163,6 +172,10 @@ namespace GeometryFriendsAgents
             Graph.ShowNodes(newDebugInfo, this.graph);
             // see path created by A*
             this.graph.showAllKnownPaths(newDebugInfo, this.type);
+
+            // see current path
+            if(this.nextDiamondPath != null)
+                Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
 
             //List<DebugInformation> debug = new List<DebugInformation>();
             //debug.AddRange(this.debugInfo);
@@ -276,6 +289,16 @@ namespace GeometryFriendsAgents
                 }
             }
 
+        }
+
+        private void updateAStar(RectangleRepresentation rI, CircleRepresentation cI)
+        {
+            this.matrix.updateMatrix(rI, cI);
+            this.graph.updateGraph(rI, cI);
+
+            SearchParameters searchParameters = new SearchParameters(this.graph.rectangleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
+            PathFinder pathFinder = new PathFinder(searchParameters, this.type);
+            this.nextDiamondPath = pathFinder.FindPath();
         }
 
         /// <summary>

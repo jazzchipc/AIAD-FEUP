@@ -235,6 +235,29 @@ namespace GeometryFriendsAgents
             }
         }
 
+        public void updateRectanglePosition(RectangleRepresentation rI)
+        {
+            int rectangleX = (int)rI.X;
+            int rectangleY = (int)rI.Y;
+
+            this.rectangleNode.location = new Point(rectangleX, rectangleY);
+        }
+
+        public void updateCirclePosition(CircleRepresentation cI)
+        {
+            int circleX = (int)cI.X;
+            int circleY = (int)cI.Y;
+
+            this.circleNode.location = new Point(circleX, circleY);
+        }
+
+        public void updateGraph(RectangleRepresentation rI, CircleRepresentation cI)
+        {
+            this.updateRectanglePosition(rI);
+            this.updateCirclePosition(cI);
+            this.generateAdjacencyMatrix(this.matrix);
+        }
+
     }
 
     public class Path
