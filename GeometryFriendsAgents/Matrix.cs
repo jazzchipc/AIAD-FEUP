@@ -174,6 +174,67 @@ namespace GeometryFriendsAgents
         }
 
         /// <summary>
+        /// Updates the position of the rectangle and circle on the Matrix. Diamonds are disregarded becaus ethey make no difference in collisions.
+        /// </summary>
+        public void updateMatrix(RectangleRepresentation rI, CircleRepresentation cI)
+        {
+            // 'Clean' every space occupied by rectangle or circle
+            for(int i = 0; i < this.pixels.GetLength(0); i++)
+            {
+                for(int j = 0; j < this.pixels.GetLength(1); j++)
+                {
+                    Pixel currentPixel = this.getPixel(i, j);
+                    if (currentPixel.type == Pixel.Type.Rectangle || 
+                        currentPixel.type == Pixel.Type.Circle || 
+                        currentPixel.type == Pixel.Type.Diamond)
+                    {
+                        currentPixel.type = Pixel.Type.Space;
+                    }
+                }
+            }
+
+            int rectangleX = (int)rI.X;
+            int rectangleY = (int)rI.Y;
+            int rectangleWidth = (int)rI.Height; // TODO: calculate width from height
+
+            int circleX = (int)cI.X;
+            int circleY = (int)cI.Y;
+            int circleRadius = (int)cI.Radius - 20;
+
+            // RECTANGLE update
+            for (int x = rectangleX - rectangleWidth / 2; x < rectangleX + rectangleWidth / 2; x++)
+            {
+                for (int y = rectangleY - 10 / 2; y < rectangleY + 10 / 2; y++)
+                {
+                    if (!this.inBounds(x, y)) // x and y out of bounds
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        this.getPixel(x, y).type = Pixel.Type.Rectangle;
+                    }
+                }
+            }
+
+            // CIRCLE update
+            for (int x = circleX - circleRadius / 2; x < circleX + circleRadius / 2; x++)
+            {
+                for (int y = circleY - circleRadius / 2; y < circleY + circleRadius / 2; y++)
+                {
+                    if (!this.inBounds(x, y)) // x and y out of bounds
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        this.getPixel(x, y).type = Pixel.Type.Circle;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Check if a point "views" the other (if there is a straight line between them with no obstacles)
         /// </summary>
         /// <param name="beginPoint"></param>
@@ -217,10 +278,15 @@ namespace GeometryFriendsAgents
 
                 for (int y = 0; y < Math.Abs(deltaY); y++)
                 {
-                    int trueY = beginPoint.Y + (y * signY);
+                    int currentY = beginPoint.Y + (y * signY);
+
+                    if (!yInBounds(currentY))
+                    {
+                        continue;
+                    }
 
                     // since the line is not really straight, we must for more than one point and use a 'wide' line
-                    if (!this.pixels[beginPoint.X, trueY].isWalkable(agentType))
+                    if (!this.pixels[beginPoint.X, currentY].isWalkable(agentType))
                     {
                         return false;
                     }
