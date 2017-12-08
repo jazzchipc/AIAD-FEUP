@@ -1,5 +1,6 @@
 ﻿
 using GeometryFriends;
+using GeometryFriends.AI;
 using GeometryFriends.AI.Perceptions.Information;
 using System;
 using static GeometryFriendsAgents.Utils;
@@ -10,6 +11,7 @@ namespace GeometryFriendsAgents
     public class Status
     {
         private AgentType agentType;
+        private Moves actualMove;
         
         private Quantifier Left_From_Target;
         private Quantifier Right_From_Target;
@@ -32,6 +34,7 @@ namespace GeometryFriendsAgents
         private Quantifier Moving_Left;
         private Quantifier Moving_Towards_Target;
         private Quantifier Moving_Up;
+        private Quantifier Moving_Down;
 
         private bool Blocked; //TODO When Agent is MOVING but his position doesn't change
         //TODO Implement Status Moving Fast, and Moving Slow OR Moving Direction
@@ -76,9 +79,11 @@ namespace GeometryFriendsAgents
         public Quantifier MOVING_TOWARDS_TARGET { get => Moving_Towards_Target; set => Moving_Towards_Target = value; }
         public bool NEAR_TARGET { get => Near_Target; set => Near_Target = value; }
         public Quantifier MOVING_UP { get => Moving_Up; set => Moving_Up = value; }
+        public Moves ACTUAL_MOVE { get => actualMove; set => actualMove = value; }
+        public Quantifier MOVING_DOWN { get => Moving_Down; set => Moving_Down = value; }
 
         //This function only cares for the current Agent
-        
+
         public void Update(CircleRepresentation actualCircle, RectangleRepresentation actualRectangle, CollectibleRepresentation diamondToCatch, AgentType thisAgent)
         {
             this.circle_radius = actualCircle.Radius;
@@ -149,6 +154,13 @@ namespace GeometryFriendsAgents
                 checkMovement(rectangle.VelocityX, rectangle.VelocityY, circle.VelocityX, circle.VelocityY);
                 checkMovementRelativeToTarget(rectangle.X, rectangle.VelocityX, obstacle.X);
             }
+        }
+
+        public void Update(CircleRepresentation circle, RectangleRepresentation rectangle, ObstacleRepresentation obstacle, 
+            AgentType thisAgent, Moves actualMove)
+        {
+            this.ACTUAL_MOVE = actualMove;
+            this.Update(circle, rectangle, obstacle, thisAgent);
         }
         
         private void compareAgentWithTarget(float agentXposition, float agentYposition, float targetXposition, float targetYposition)
@@ -513,7 +525,25 @@ namespace GeometryFriendsAgents
                 this.MOVING_UP = Quantifier.NONE;
             }
 
+            if(agent1Yvel > a_lot_speed)
+            {
+                this.MOVING_DOWN = Quantifier.A_LOT;
+            }
+            else if(agent1Yvel > a_bit_speed)
+            {
+                this.MOVING_DOWN = Quantifier.A_BIT;
+            }
+            else if(agent1Yvel > slight_speed)
+            {
+                this.MOVING_DOWN = Quantifier.SLIGHTLY;
+            }
+            else
+            {
+                this.MOVING_DOWN = Quantifier.NONE;
+            }
+
             if(this.MOVING_UP == Quantifier.NONE &&
+                this.MOVING_DOWN == Quantifier.NONE &&
                 this.MOVING_LEFT == Quantifier.NONE &&
                 this.MOVING_RIGHT == Quantifier.NONE)
             {
@@ -572,6 +602,22 @@ namespace GeometryFriendsAgents
             else
             {
                 this.MOVING_TOWARDS_TARGET = Quantifier.NONE;
+            }
+        }
+
+        private void checkBlocked()
+        {
+            if(this.ACTUAL_MOVE == Moves.MOVE_LEFT || this.ACTUAL_MOVE == Moves.MOVE_RIGHT
+                || this.ACTUAL_MOVE == Moves.ROLL_LEFT || this.ACTUAL_MOVE == Moves.ROLL_RIGHT)
+            {
+                if(!this.MOVING)
+                {
+                    this.Blocked = true;
+                }
+                else
+                {
+                    this.Blocked = false;
+                }
             }
         }
 
