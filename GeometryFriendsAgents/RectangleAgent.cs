@@ -39,6 +39,8 @@ namespace GeometryFriendsAgents
 
         private List<AgentMessage> messages;
 
+        private List<Node> diamondsToCatch;
+
         //Area of the game screen
         protected Rectangle area;
 
@@ -73,6 +75,7 @@ namespace GeometryFriendsAgents
 
             //messages exchange
             messages = new List<AgentMessage>();
+            diamondsToCatch = new List<Node>();
         }
 
 
@@ -94,12 +97,13 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
-            //TODO: remove this
+            InitDiamondsToCatch();
+
             this.nextDiamondIndex = 0;
 
             //DebugSensorsInfo();
         }
-              
+
         // See SensorsUpdated@CicleAgent.cs for parameter details
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
@@ -180,6 +184,13 @@ namespace GeometryFriendsAgents
             //List<DebugInformation> debug = new List<DebugInformation>();
             //debug.AddRange(this.debugInfo);
             //debug.AddRange(newDebugInfo.ToArray());
+
+            //PARA TESTAR
+            if (this.diamondsToCatch.Count > this.nCollectiblesLeft)
+            {
+                Node node = this.graph.diamondNodes[nextDiamondIndex];
+                catchNextDiamond(node);
+            }
 
             this.debugInfo = newDebugInfo.ToArray();
 
@@ -309,10 +320,11 @@ namespace GeometryFriendsAgents
         {
             bool validRequest = ValidRequest(request);
             Answer.Type answerType;
+            Object attachment = null;
 
             if (validRequest)
             {
-                request.command.execute(this);
+                attachment = request.command.execute(this);
                 answerType = Answer.Type.YES;
             }
             else
@@ -320,7 +332,7 @@ namespace GeometryFriendsAgents
                 answerType = Answer.Type.NO;
             }
 
-            Answer answer = new Answer(answerType, request.id);
+            Answer answer = new Answer(answerType, request.id, attachment);
             this.messages.Add(answer.message);
         }
 
@@ -362,6 +374,43 @@ namespace GeometryFriendsAgents
             this.currentAction = Moves.MORPH_UP;
         }
 
+        public Path getCheapestPath()
+        {
+            return this.graph.getCheapestPath();
+        }
+
+        public void catchDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Retangulo - Vou apanhar o diamante: " + node.location);
+            int index = this.graph.diamondNodes.IndexOf(node);
+            nextDiamondIndex = index;
+        }
+
+        public void catchNextDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Retangulo - Vou apagar o diamante: " + node.location);
+            diamondsToCatch.Remove(node);
+
+            this.graph.removeFromKnownPaths(node);
+            
+            Path path = this.graph.getCheapestPath();
+            if (path != null)
+                catchDiamond(path.getGoalNode());
+        }
+
+        public void InitDiamondsToCatch()
+        {
+            List<Path> paths = this.graph.knownPaths;
+            Node node = null;
+            foreach (Path path in paths)
+            {
+                node = path.getGoalNode();
+                if (node.type == Node.Type.Diamond)
+                {
+                    diamondsToCatch.Add(node);
+                }
+            }
+        }
     }
 
 }
