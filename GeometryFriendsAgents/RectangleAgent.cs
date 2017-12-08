@@ -185,6 +185,13 @@ namespace GeometryFriendsAgents
             //debug.AddRange(this.debugInfo);
             //debug.AddRange(newDebugInfo.ToArray());
 
+            //PARA TESTAR
+            if (this.diamondsToCatch.Count > this.nCollectiblesLeft)
+            {
+                Node node = this.graph.diamondNodes[nextDiamondIndex];
+                catchNextDiamond(node);
+            }
+
             this.debugInfo = newDebugInfo.ToArray();
 
         }

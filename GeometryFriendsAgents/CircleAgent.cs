@@ -264,6 +264,7 @@ namespace GeometryFriendsAgents
             {
                 if (remaining.Count > 0)
                 {
+
                     List<CollectibleRepresentation> toRemove = new List<CollectibleRepresentation>();
                     foreach (CollectibleRepresentation item in uncaughtCollectibles)
                     {
@@ -276,7 +277,11 @@ namespace GeometryFriendsAgents
                     foreach (CollectibleRepresentation item in toRemove)
                     {
                         uncaughtCollectibles.Remove(item);
-                    }
+                        //PARA TESTAR
+                        Point point = new Point((int)item.X, (int)item.Y);
+                        Node node = diamondsToCatch.Find(nodeTmp => nodeTmp.location == point);
+                        catchNextDiamond(node);
+                    }                 
                 }
             }
 
@@ -337,6 +342,7 @@ namespace GeometryFriendsAgents
                     //set all the debug information to be read by the agents manager
                     debugInfo = newDebugInfo.ToArray();
                 }
+
             }
         }
 
@@ -884,7 +890,7 @@ namespace GeometryFriendsAgents
             System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
             diamondsToCatch.Remove(node);
             this.graph.removeFromKnownPaths(node);
-            
+
             Path path = this.graph.getCheapestPath();
             if (path != null)
                 catchDiamond(path.getGoalNode());
