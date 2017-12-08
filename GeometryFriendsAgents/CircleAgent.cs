@@ -227,6 +227,7 @@ namespace GeometryFriendsAgents
             //Log.LogInformation(this.obstaclesInfo[0].ToString());
         }
 
+        
         //implements abstract circle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
         public override Moves GetAction()
         {
@@ -795,7 +796,6 @@ namespace GeometryFriendsAgents
             if(answer.idOfRequest == this.requests.Peek().id)
             {
                 Request fulfilled = this.requests.Dequeue();
-                System.Diagnostics.Debug.WriteLine("Request " + fulfilled.id + " fulfilled.");
             }
             else
             {
