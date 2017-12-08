@@ -57,6 +57,9 @@ namespace GeometryFriendsAgents
         int nextDiamondIndex;
         Path nextDiamondPath;
 
+        // Movement restrictions
+        MovementRestrictions movementRestrictions;
+
         public RectangleAgent()
         {
             //Change flag if agent is not to be used
@@ -97,9 +100,9 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
-            InitDiamondsToCatch();
+            this.movementRestrictions = new MovementRestrictions(this.matrix);
 
-            this.nextDiamondIndex = 0;
+            InitDiamondsToCatch();
 
             //DebugSensorsInfo();
         }
@@ -407,7 +410,10 @@ namespace GeometryFriendsAgents
                 node = path.getGoalNode();
                 if (node.type == Node.Type.Diamond)
                 {
-                    diamondsToCatch.Add(node);
+                    if(this.movementRestrictions.canRectangleGet(this.graph.rectangleNode, node))
+                    {
+                        diamondsToCatch.Add(node);
+                    }
                 }
             }
         }
