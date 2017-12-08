@@ -116,7 +116,8 @@ namespace GeometryFriendsAgents
             circleInfo = cI;
             collectiblesInfo = colI;
 
-            this.updateAStar(rI, cI);
+            if(!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                this.updateAStar(rI, cI);
         }
 
         //implements abstract rectangle interface: signals if the agent is actually implemented or not
@@ -151,7 +152,10 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
         public override Moves GetAction()
         {
-            return currentAction;
+            if (!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                return currentAction;
+            else
+                return Moves.NO_ACTION;
         }
 
         //implements abstract rectangle interface: updates the agent state logic and predictions
@@ -285,7 +289,7 @@ namespace GeometryFriendsAgents
 
             // create node graph
             this.graph = new Graph(this.type, this.matrix);
-            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
+            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI, this.type);
             this.graph.generateAdjacencyMatrix(this.matrix);
 
             for (int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
@@ -411,7 +415,11 @@ namespace GeometryFriendsAgents
                 node = path.getGoalNode();
                 if (node.type == Node.Type.Diamond)
                 {
-                    if(this.movementRestrictions.canRectangleGet(this.graph.rectangleNode, node))
+                    if (Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                    {
+                        diamondsToCatch.Add(node);
+                    }
+                    else if(this.movementRestrictions.canRectangleGet(this.graph.rectangleNode, node))
                     {
                         diamondsToCatch.Add(node);
                     }

@@ -63,7 +63,7 @@ namespace GeometryFriendsAgents
             return adjacentNodes;
         }
 
-        public void generateNodes(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI)
+        public void generateNodes(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, AgentType agentType)
         {
             int rectangleX = (int)rI.X;
             int rectangleY = (int)rI.Y;
@@ -78,6 +78,33 @@ namespace GeometryFriendsAgents
             Node circle = new Node(circleX, circleY, Node.Type.Circle);
             this.addNode(circle);
             this.circleNode = circle;
+
+            if(agentType == AgentType.Circle)   // add rectangle as if it was an obstacle
+            {
+                List<Point> corners = new List<Point>();
+
+                // Make the 'corners' with just a little bit of offset, so that walkable line works fine
+                Point upLeftCorner = new Point((int)(rI.X - Utils.getRectangleWidth(rI.Height) / 2) - 1, (int)(rI.Y - rI.Height / 2) - 1);
+                Point upRightCorner = new Point((int)(rI.X + Utils.getRectangleWidth(rI.Height) / 2) + 1, (int)(rI.Y - rI.Height / 2) - 1);
+                Point downLeftCorner = new Point((int)(rI.X - Utils.getRectangleWidth(rI.Height) / 2) - 1, (int)(rI.Y + rI.Height / 2) + 1);
+                Point downRightCorner = new Point((int)(rI.X + Utils.getRectangleWidth(rI.Height) / 2) + 1, (int)(rI.Y + rI.Height / 2) + 1);
+
+                corners.Add(upLeftCorner);
+                corners.Add(upRightCorner);
+                corners.Add(downLeftCorner);
+                corners.Add(downRightCorner);
+
+                for (int i = 0; i < corners.Count; i++)
+                {
+                    Point currentCorner = corners[i];
+
+                    if (this.matrix.inBounds(currentCorner))
+                    {
+                        Node node = new Node(currentCorner.X, currentCorner.Y, Node.Type.Obstacle);
+                        this.addNode(node);
+                    }
+                }
+            }
 
             // OBSTACLE
             for (int i = 0; i < oI.Length; i++)
