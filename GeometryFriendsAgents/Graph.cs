@@ -183,10 +183,11 @@ namespace GeometryFriendsAgents
         {
             List<Point> corners = new List<Point>();
 
-            Point upLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2), (int)(obstacle.Y - obstacle.Height / 2));
-            Point upRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2), (int)(obstacle.Y - obstacle.Height / 2));
-            Point downLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2), (int)(obstacle.Y + obstacle.Height / 2));
-            Point downRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2), (int)(obstacle.Y + obstacle.Height / 2));
+            // Make the 'corners' with just a little bit of offset, so that walkable line works fine
+            Point upLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2) - 1 , (int)(obstacle.Y - obstacle.Height / 2) - 1);
+            Point upRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2) + 1, (int)(obstacle.Y - obstacle.Height / 2) - 1);
+            Point downLeftCorner = new Point((int)(obstacle.X - obstacle.Width / 2) - 1 , (int)(obstacle.Y + obstacle.Height / 2) + 1);
+            Point downRightCorner = new Point((int)(obstacle.X + obstacle.Width / 2) + 1, (int)(obstacle.Y + obstacle.Height / 2) + 1);
 
             corners.Add(upLeftCorner);
             corners.Add(upRightCorner);

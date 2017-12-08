@@ -176,7 +176,8 @@ namespace GeometryFriendsAgents
             List<DebugInformation> newDebugInfo = new List<DebugInformation>();
 
             // see nodes considered by A*
-            Graph.ShowNodes(newDebugInfo, this.graph);
+            // No need to show duplicated nodes
+            // Graph.ShowNodes(newDebugInfo, this.graph);
             // see path created by A*
             this.graph.showAllKnownPaths(newDebugInfo, this.type);
 
