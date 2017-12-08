@@ -1,6 +1,7 @@
 using GeometryFriends.AI.Communication;
 using GeometryFriends.AI.Interfaces;
 using System;
+using System.Drawing;
 
 namespace GeometryFriendsAgents
 {
@@ -40,56 +41,103 @@ namespace GeometryFriendsAgents
 
         public Type type;
         public int idOfRequest;
+        public Object attachment;
 
-        public Answer(Type type, int idOfRequest) : base()
+        public Answer(Type type, int idOfRequest, Object attachment) : base()
         {
             this.type = type;
             this.idOfRequest = idOfRequest;
+            this.attachment = attachment;
             this.message = new AgentMessage("Answer to request " + this.idOfRequest, this);
         }
     }
 
     public abstract class Command
     {
-        public abstract void execute(RectangleAgent executor);
+        public abstract Object execute(RectangleAgent executor);
 
         public class MoveLeft : Command
         {
-            public override void execute(RectangleAgent executor)
+            public override Object execute(RectangleAgent executor)
             {
                 executor.MoveLeft();
+                return null;
             }
         }
 
         public class MoveRight : Command
         {
-            public override void execute(RectangleAgent executor)
+            public override Object execute(RectangleAgent executor)
             {
                 executor.MoveRight();
+                return null;
             }
         }
 
         internal class NoAction : Command
         {
-            public override void execute(RectangleAgent executor)
+            public override Object execute(RectangleAgent executor)
             {
                 executor.NoAction();
+                return null;
             }
         }
 
         internal class MorphDown : Command
         {
-            public override void execute(RectangleAgent executor)
+            public override Object execute(RectangleAgent executor)
             {
                 executor.MorphDown();
+                return null;
             }
         }
 
         internal class MorphUp : Command
         {
-            public override void execute(RectangleAgent executor)
+            public override Object execute(RectangleAgent executor)
             {
                 executor.MorphUp();
+                return null;
+            }
+        }
+
+        public class GetCheapestPath : Command
+        {
+            public override Object execute(RectangleAgent executor)
+            {
+                return executor.getCheapestPath();
+            }
+        }
+
+        public class CatchDiamond : Command
+        {
+            Node node;
+
+            public CatchDiamond(Node node)
+            {
+                this.node = node;
+            }
+
+            public override Object execute(RectangleAgent executor)
+            {
+                executor.catchDiamond(node);
+                return null;
+            }
+        }
+
+        public class CatchNextDiamond : Command
+        {
+            Node node;
+
+            public CatchNextDiamond(Node node)
+            {
+                this.node = node;
+            }
+
+            public override Object execute(RectangleAgent executor)
+            {
+                executor.catchNextDiamond(node);
+                return null;
             }
         }
     }

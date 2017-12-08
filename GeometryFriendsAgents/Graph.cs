@@ -234,6 +234,28 @@ namespace GeometryFriendsAgents
                 agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i].location, path[i + 1].location, color));
             }
         }
+        public Path getCheapestPath()
+        {
+            Path cheapestPath = null;
+            foreach (Path path in knownPaths)
+            {
+                if (cheapestPath == null || cheapestPath.totalCost > path.totalCost)
+                    cheapestPath = path;
+            }
+
+            return cheapestPath;
+        }
+
+        public void removeFromKnownPaths(Node node)
+        {
+            for (int i = 0; i < knownPaths.Count; i++)
+            {
+                if (knownPaths[i].getGoalNode().Equals(node)) {
+                    knownPaths.Remove(knownPaths[i]);
+                }
+            }
+            System.Diagnostics.Debug.WriteLine(knownPaths);
+        }
 
         public void updateRectanglePosition(RectangleRepresentation rI)
         {
