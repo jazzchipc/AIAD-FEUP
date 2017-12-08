@@ -68,7 +68,7 @@ namespace GeometryFriendsAgents
         // A star initial setup
         Matrix matrix;
         Graph graph;
-        
+
         // Diamond to get
         int nextDiamondIndex;
         Path nextDiamondPath;
@@ -149,10 +149,9 @@ namespace GeometryFriendsAgents
             // TODO: Change this
             this.nextDiamondIndex = 0;
 
+            InitDiamondsToCatch();
 
             this.pathsToFollowStateMachine();
-
-            InitDiamondsToCatch();
 
             DebugSensorsInfo();
         }
@@ -179,11 +178,11 @@ namespace GeometryFriendsAgents
             lock (remaining)
             {
                 this.remaining = new List<CollectibleRepresentation>(collectiblesInfo);
-                
+
             }
 
             this.updateAStar(rI, cI);
-            
+
 
             //DebugSensorsInfo();
         }
@@ -322,7 +321,7 @@ namespace GeometryFriendsAgents
 
                     // see current path
                     Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
-                    
+
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)
@@ -711,66 +710,68 @@ namespace GeometryFriendsAgents
             Moves move = Moves.NO_ACTION;
             if (this.predictor != null)
             {
-                ActionSimulator sim = predictor;
-                sim.Update(1);
-
-                //TODO NAO e preciso esta treta toda dos status
-                CircleRepresentation circle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
-                    sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
-                RectangleRepresentation rectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
-                    sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
-                ObstacleRepresentation dummy = new ObstacleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
-                    Utils.getRectangleWidth(sim.RectangleHeight), sim.RectangleHeight);
-
-                Status futureCircle = new Status();
-                futureCircle.Update(circle, rectangle, dummy, AgentType.Circle);
-
-
-                if (this.Jumping)
+                if (predictor.CharactersReady() && predictor.SimulationHistoryDebugInformation.Count == 0)
                 {
-                    if (this.rectangleInfo.Height > 160) //When almost fully morphed up, circle jumps
+                    ActionSimulator sim = predictor;
+                    sim.Update(1);
+
+                    //TODO NAO e preciso esta treta toda dos status
+                    CircleRepresentation circle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
+                        sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
+                    RectangleRepresentation rectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
+                        sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
+                    ObstacleRepresentation dummy = new ObstacleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
+                        Utils.getRectangleWidth(sim.RectangleHeight), sim.RectangleHeight);
+
+                    Status futureCircle = new Status();
+                    futureCircle.Update(circle, rectangle, dummy, AgentType.Circle);
+
+
+                    if (this.Jumping)
                     {
-                        Log.LogInformation("REHEARSAL: Jumping!");
-                        move = Moves.JUMP;
-                        SendRequest(new Request(new Command.MorphUp()));
-                        this.Jumping = false; //Already ended the jump
-                    }
-                    else //while rectangle not yet all morphed up
-                    {
-                        Log.LogInformation("REHEARSAL: Beginning the launch!");
-                        move = Moves.NO_ACTION;
-                        SendRequest(new Request(new Command.MorphUp()));
-                    }
-                }
-                else
-                {
-                    if (this.agentStatus.ABOVE_OTHER_AGENT == Utils.Quantifier.SLIGHTLY &&
-                    this.agentStatus.LEFT_FROM_OTHER_AGENT == Utils.Quantifier.NONE &&
-                    this.agentStatus.RIGHT_FROM_OTHER_AGENT == Utils.Quantifier.NONE &&
-                    this.agentStatus.NEAR_OTHER_AGENT) //Ready to jump
-                    {
-                        if (this.agentStatus.MOVING)
+                        if (this.rectangleInfo.Height > 160) //When almost fully morphed up, circle jumps
                         {
-                            Log.LogInformation("REHEARSAL: Still moving on top of rectangle");
-                            move = HoldGround();
-                            SendRequest(new Request(new Command.MorphDown()));
+                            Log.LogInformation("REHEARSAL: Jumping!");
+                            move = Moves.JUMP;
+                            SendRequest(new Request(new Command.MorphUp()));
+                            this.Jumping = false; //Already ended the jump
                         }
-                        else //Prepare to jump
+                        else //while rectangle not yet all morphed up
                         {
-                            Log.LogInformation("REHEARSAL: Stopped, and activating launch sequence");
-                            this.Jumping = true;
+                            Log.LogInformation("REHEARSAL: Beginning the launch!");
                             move = Moves.NO_ACTION;
                             SendRequest(new Request(new Command.MorphUp()));
                         }
                     }
-                    else //Position himself on top of the rectangle
+                    else
                     {
-                        Log.LogInformation("REHEARSAL: Jumping onto Rectangle");
-                        move = JumpOntoRectangle();
-                        SendRequest(new Request(new Command.MorphDown()));
+                        if (this.agentStatus.ABOVE_OTHER_AGENT == Utils.Quantifier.SLIGHTLY &&
+                        this.agentStatus.LEFT_FROM_OTHER_AGENT == Utils.Quantifier.NONE &&
+                        this.agentStatus.RIGHT_FROM_OTHER_AGENT == Utils.Quantifier.NONE &&
+                        this.agentStatus.NEAR_OTHER_AGENT) //Ready to jump
+                        {
+                            if (this.agentStatus.MOVING)
+                            {
+                                Log.LogInformation("REHEARSAL: Still moving on top of rectangle");
+                                move = HoldGround();
+                                SendRequest(new Request(new Command.MorphDown()));
+                            }
+                            else //Prepare to jump
+                            {
+                                Log.LogInformation("REHEARSAL: Stopped, and activating launch sequence");
+                                this.Jumping = true;
+                                move = Moves.NO_ACTION;
+                                SendRequest(new Request(new Command.MorphUp()));
+                            }
+                        }
+                        else //Position himself on top of the rectangle
+                        {
+                            Log.LogInformation("REHEARSAL: Jumping onto Rectangle");
+                            move = JumpOntoRectangle();
+                            SendRequest(new Request(new Command.MorphDown()));
+                        }
                     }
                 }
-
             }
 
             return move;
@@ -830,19 +831,31 @@ namespace GeometryFriendsAgents
             float rectangleDistance = attachment.totalCost;
             float circleDistance = this.graph.getCheapestPath().totalCost;
 
-            if (rectangleNode.Equals(circleNode) && rectangleDistance >= circleDistance)
+            if (rectangleNode.Equals(circleNode))
             {
-               /* 
-                * Sends message to rectangle saying he cannot go.
-                * It updates its own diamond list so it doesn't try to catch that diamond.
-                */
-                SendRequest(new Request(new Command.DeleteDiamond(rectangleNode)));
-                //this.State = sendOrder
+
+                if (rectangleDistance >= circleDistance)
+                {
+                    /* 
+                    * Sends message to rectangle saying he cannot go.
+                    * It updates its own diamond list so it doesn't try to catch that diamond.
+                    */
+                    SendRequest(new Request(new Command.CatchNextDiamond(rectangleNode)));
+                    catchDiamond(circleNode);
+                }
+                else
+                {
+                    SendRequest(new Request(new Command.CatchDiamond(rectangleNode)));
+                    catchNextDiamond(circleNode);
+                }
+                //this.State = ??
+
             }
             else
             {
                 /* Sends message to rectangle saying he can catch diamond */
                 SendRequest(new Request(new Command.CatchDiamond(rectangleNode)));
+                catchDiamond(circleNode);
                 //this.State = bothExecuting
             }
         }
@@ -857,6 +870,24 @@ namespace GeometryFriendsAgents
                     break;
             }
 
+        }
+
+        public void catchDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Circulo - Vou apanhar o diamante: " + node.location);
+            int index = this.graph.diamondNodes.IndexOf(node);
+            nextDiamondIndex = index;
+        }
+
+        public void catchNextDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
+            diamondsToCatch.Remove(node);
+            this.graph.removeFromKnownPaths(node);
+            
+            Path path = this.graph.getCheapestPath();
+            if (path != null)
+                catchDiamond(path.getGoalNode());
         }
 
         public void InitDiamondsToCatch()

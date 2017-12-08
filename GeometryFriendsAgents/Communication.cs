@@ -125,18 +125,18 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public class CatchNewDiamond : Command
+        public class CatchNextDiamond : Command
         {
             Node node;
 
-            public CatchNewDiamond(Node node)
+            public CatchNextDiamond(Node node)
             {
                 this.node = node;
             }
 
             public override Object execute(RectangleAgent executor)
             {
-                executor.catchNewDiamond(node);
+                executor.catchNextDiamond(node);
                 return null;
             }
         }
