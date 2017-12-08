@@ -51,6 +51,12 @@ namespace GeometryFriendsAgents
 
         private List<AgentMessage> messages;
 
+        private List<Node> diamondsToCatch;
+
+        private enum State { Init };
+
+        private State state;
+
         //Area of the game screen
         private Rectangle area;
 
@@ -85,8 +91,8 @@ namespace GeometryFriendsAgents
             possibleMoves.Add(Moves.ROLL_LEFT);
             possibleMoves.Add(Moves.ROLL_RIGHT);
             possibleMoves.Add(Moves.JUMP);
-            possibleMoves.Add(Moves.GROW);          
-      
+            possibleMoves.Add(Moves.GROW);
+
             //history keeping
             uncaughtCollectibles = new List<CollectibleRepresentation>();
             caughtCollectibles = new List<CollectibleRepresentation>();
@@ -99,6 +105,10 @@ namespace GeometryFriendsAgents
             requests = new Queue<Request>();
 
             agentStatus = new Status();
+
+            state = State.Init;
+
+            diamondsToCatch = new List<Node>();
         }
 
         /// <summary>
@@ -130,7 +140,11 @@ namespace GeometryFriendsAgents
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
-            
+
+            this.pathsToFollowStateMachine();
+
+            InitDiamondsToCatch();
+
             DebugSensorsInfo();
         }
 
@@ -225,7 +239,7 @@ namespace GeometryFriendsAgents
         public override void Update(TimeSpan elapsedGameTime)
         {
             // Execute an action every 'moveStep' cycles
-            if(iterationCount == moveStep)
+            if (iterationCount == moveStep)
             {
                 DecideAction();
                 iterationCount = 0;
@@ -276,8 +290,8 @@ namespace GeometryFriendsAgents
                     toSim.AddInstruction(currentAction);
 
                     //register collectibles that are caught during simulation
-                    toSim.SimulatorCollectedEvent += delegate(Object o, CollectibleRepresentation col) { simCaughtCollectibles.Add(col); };
-                    
+                    toSim.SimulatorCollectedEvent += delegate (Object o, CollectibleRepresentation col) { simCaughtCollectibles.Add(col); };
+
                     //simulate 2 seconds (predict what will happen 2 seconds ahead)
                     toSim.Update(2);
 
@@ -292,7 +306,7 @@ namespace GeometryFriendsAgents
                     Graph.ShowNodes(newDebugInfo, this.graph);
                     // see path created by A*
                     this.graph.showAllKnownPaths(newDebugInfo, this.type);
-                    
+
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)
@@ -304,9 +318,9 @@ namespace GeometryFriendsAgents
                     foreach (CollectibleRepresentation item in caughtCollectibles)
                     {
                         newDebugInfo.Add(DebugInformationFactory.CreateCircleDebugInfo(new PointF(item.X - debugCircleSize / 2, item.Y - debugCircleSize / 2), debugCircleSize, GeometryFriends.XNAStub.Color.GreenYellow));
-                    }                 
+                    }
                     //set all the debug information to be read by the agents manager
-                    debugInfo = newDebugInfo.ToArray();                    
+                    debugInfo = newDebugInfo.ToArray();
                 }
             }
         }
@@ -437,7 +451,7 @@ namespace GeometryFriendsAgents
 
             float positionMargin = 10;
 
-            if(this.predictor != null)
+            if (this.predictor != null)
             {
                 ActionSimulator sim = predictor;
                 sim.Update(1);
@@ -449,14 +463,14 @@ namespace GeometryFriendsAgents
                 RectangleRepresentation futureRectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
                     sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
 
-                
+
                 CircleRepresentation[] circles = new CircleRepresentation[] { futureCircle, new CircleRepresentation() };
                 RectangleRepresentation[] rectangles = new RectangleRepresentation[] { futureRectangle, new RectangleRepresentation() };
                 futureStatus.Update(circles, rectangles, diamondToCatch, AgentType.Circle);
-                
-                                
 
-                
+
+
+
                 Log.LogInformation(futureStatus.ToString());
                 Log.LogInformation(diamondToCatch.ToString());
                 Log.LogInformation("Actual Circle: " + circleInfo.ToString());
@@ -469,7 +483,7 @@ namespace GeometryFriendsAgents
                 float circlePredictedPositionToRectangleX = sim.CirclePositionX - sim.RectanglePositionX;
 
                 SendRectangleToPosition(diamondToCatch.X + 500, sim.RectanglePositionX);
-                
+
                 /*
                 if(futureStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
                 {
@@ -485,19 +499,19 @@ namespace GeometryFriendsAgents
                     move = Moves.JUMP;
                 }*/
 
-                
-                if(futureStatus.MOVING_RIGHT == Utils.Quantifier.A_BIT)
+
+                if (futureStatus.MOVING_RIGHT == Utils.Quantifier.A_BIT)
                 {
                     move = Moves.NO_ACTION;
                 }
-                else if(futureStatus.MOVING_RIGHT == Utils.Quantifier.A_LOT)
+                else if (futureStatus.MOVING_RIGHT == Utils.Quantifier.A_LOT)
                 {
                     move = Moves.ROLL_LEFT;
                 }
                 else
                 {
                     move = Moves.ROLL_RIGHT;
-                }                
+                }
 
             }
 
@@ -512,7 +526,7 @@ namespace GeometryFriendsAgents
             Moves Roll_Pretended_Direction, Roll_Oposite_Direction;
 
             //Define directions
-            if(direction == Utils.Direction.RIGHT)
+            if (direction == Utils.Direction.RIGHT)
             {
                 Moving_In_Pretended_Direction = this.agentStatus.MOVING_RIGHT;
                 Roll_Pretended_Direction = Moves.ROLL_RIGHT;
@@ -526,7 +540,7 @@ namespace GeometryFriendsAgents
             }
 
             //Decide action
-            if(this.predictor != null)
+            if (this.predictor != null)
             {
                 //TODO Remove this first condition. This is the same as Else condition
                 if (Moving_In_Pretended_Direction == speed + 1) //If Agent is moving with a little bit excessive speed
@@ -544,7 +558,7 @@ namespace GeometryFriendsAgents
                 {
                     Log.LogInformation("SPEED: Too much! Rolling backwards - " + Enum.GetName(typeof(Utils.Quantifier), Moving_In_Pretended_Direction).ToString());
                     move = Roll_Oposite_Direction;
-                }               
+                }
             }
 
             return move;
@@ -563,14 +577,14 @@ namespace GeometryFriendsAgents
             Moves Roll_Away_From_Obstacle;
             Utils.Direction Direction_To_Get_To_Obstacle;
 
-            if(statusCircle.LEFT_FROM_TARGET == Utils.Quantifier.NONE) //Circle is on the obstacle's right side
+            if (statusCircle.LEFT_FROM_TARGET == Utils.Quantifier.NONE) //Circle is on the obstacle's right side
             {
                 Distance_From_Obstacle = statusCircle.RIGHT_FROM_TARGET;
                 Roll_To_Obstacle = Moves.ROLL_LEFT;
                 Roll_Away_From_Obstacle = Moves.ROLL_RIGHT;
                 Direction_To_Get_To_Obstacle = Utils.Direction.LEFT;
             }
-            else if(statusCircle.RIGHT_FROM_TARGET == Utils.Quantifier.NONE)//Circle is on the obstacle's left side
+            else if (statusCircle.RIGHT_FROM_TARGET == Utils.Quantifier.NONE)//Circle is on the obstacle's left side
             {
                 Distance_From_Obstacle = statusCircle.LEFT_FROM_TARGET;
                 Roll_To_Obstacle = Moves.ROLL_RIGHT;
@@ -585,17 +599,17 @@ namespace GeometryFriendsAgents
                 Direction_To_Get_To_Obstacle = Utils.Direction.RIGHT; //Default, not gonna be used
             }
 
-            if(statusCircle.MOVING_TOWARDS_TARGET == Utils.Quantifier.NONE) //When circle is not moving towards the target
+            if (statusCircle.MOVING_TOWARDS_TARGET == Utils.Quantifier.NONE) //When circle is not moving towards the target
             {
-                if(statusCircle.NEAR_TARGET)
+                if (statusCircle.NEAR_TARGET)
                 {
-                    if(statusCircle.ABOVE_TARGET == Utils.Quantifier.SLIGHTLY) //Already Above target
+                    if (statusCircle.ABOVE_TARGET == Utils.Quantifier.SLIGHTLY) //Already Above target
                     {
                         move = Moves.NO_ACTION;
                     }
                     else //Has to roll away from target to gain speed to jump
                     {
-                        if(Distance_From_Obstacle == Utils.Quantifier.NONE) //Is directly below target
+                        if (Distance_From_Obstacle == Utils.Quantifier.NONE) //Is directly below target
                         {
                             //TODO CIRCLE MUST FIND A WAY TO TRY TO POSITION HIMSELF TO JUMP
                             move = Moves.NO_ACTION; //TODO PROVISIONAL
@@ -613,15 +627,15 @@ namespace GeometryFriendsAgents
             }
             else //When the circle is moving towards the target
             {
-                if(Distance_From_Obstacle == Utils.Quantifier.SLIGHTLY) //when the circle has to jump now
+                if (Distance_From_Obstacle == Utils.Quantifier.SLIGHTLY) //when the circle has to jump now
                 {
                     move = Moves.JUMP;
                 }
-                else if(Distance_From_Obstacle > Utils.Quantifier.A_BIT) //When the circle is very far away, and has to go fast
+                else if (Distance_From_Obstacle > Utils.Quantifier.A_BIT) //When the circle is very far away, and has to go fast
                 {
                     move = Roll(Direction_To_Get_To_Obstacle, Utils.Quantifier.A_BIT);
                 }
-                else if(Distance_From_Obstacle > Utils.Quantifier.SLIGHTLY) //When the circle is almost in the jumping spot
+                else if (Distance_From_Obstacle > Utils.Quantifier.SLIGHTLY) //When the circle is almost in the jumping spot
                 {
                     move = Roll(Direction_To_Get_To_Obstacle, Utils.Quantifier.SLIGHTLY);
                 }
@@ -641,7 +655,7 @@ namespace GeometryFriendsAgents
         {
             Moves move = Moves.NO_ACTION;
 
-            ObstacleRepresentation rectangle = new ObstacleRepresentation(rectangleInfo.X, rectangleInfo.Y, 
+            ObstacleRepresentation rectangle = new ObstacleRepresentation(rectangleInfo.X, rectangleInfo.Y,
                 Utils.getRectangleWidth(rectangleInfo.Height), rectangleInfo.Height);
 
             return JumpOnto(rectangle);
@@ -651,11 +665,11 @@ namespace GeometryFriendsAgents
         {
             Moves move = Moves.NO_ACTION;
 
-            if(this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
+            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
             {
                 move = Moves.ROLL_RIGHT;
             }
-            else if(this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
+            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
             {
                 move = Moves.ROLL_LEFT;
             }
@@ -686,7 +700,7 @@ namespace GeometryFriendsAgents
                 futureCircle.Update(circle, rectangle, dummy, AgentType.Circle);
 
 
-                if(this.Jumping)
+                if (this.Jumping)
                 {
                     if (this.rectangleInfo.Height > 160) //When almost fully morphed up, circle jumps
                     {
@@ -741,7 +755,7 @@ namespace GeometryFriendsAgents
 
             float rectanglePredictedPositionToObjectiveX = rectanglePredictedPositionX - x;
 
-           
+
             if (rectanglePredictedPositionToObjectiveX < -positionMargin)
             {
                 this.SendRequest(new Request(new Command.MoveRight()));
@@ -754,10 +768,8 @@ namespace GeometryFriendsAgents
             {
                 this.SendRequest(new Request(new Command.MorphDown()));
             }
-            
+
         }
-
-
 
         public void SendRequest(Request request)
         {
@@ -767,10 +779,15 @@ namespace GeometryFriendsAgents
 
         public void AnswerHandler(Answer answer)
         {
-            if(answer.idOfRequest == this.requests.Peek().id)
+            if (answer.idOfRequest == this.requests.Peek().id)
             {
                 Request fulfilled = this.requests.Dequeue();
-                System.Diagnostics.Debug.WriteLine("Request " + fulfilled.id + " fulfilled.");
+                //System.Diagnostics.Debug.WriteLine("Request " + fulfilled.id + " fulfilled.");
+
+                if (fulfilled.command is Command.GetCheapestPath && answer.attachment != null)
+                {
+                    decidePaths((Path)answer.attachment);
+                }
             }
             else
             {
@@ -778,7 +795,57 @@ namespace GeometryFriendsAgents
                 this.messages.Add(this.requests.Peek().message);
             }
         }
-        
+
+        private void decidePaths(Path attachment)
+        {
+            Node rectangleNode = attachment.getGoalNode();
+            Node circleNode = this.graph.getCheapestPath().getGoalNode();
+
+            float rectangleDistance = attachment.totalCost;
+            float circleDistance = this.graph.getCheapestPath().totalCost;
+
+            if (rectangleNode.Equals(circleNode) && rectangleDistance >= circleDistance)
+            {
+               /* 
+                * Sends message to rectangle saying he cannot go.
+                * It updates its own diamond list so it doesn't try to catch that diamond.
+                */
+                SendRequest(new Request(new Command.DeleteDiamond(rectangleNode)));
+                //this.State = sendOrder
+            }
+            else
+            {
+                /* Sends message to rectangle saying he can catch diamond */
+                SendRequest(new Request(new Command.CatchDiamond(rectangleNode)));
+                //this.State = bothExecuting
+            }
+        }
+
+        private void pathsToFollowStateMachine()
+        {
+            //por dentro de um while
+            switch (state)
+            {
+                case State.Init:
+                    SendRequest(new Request(new Command.GetCheapestPath()));
+                    break;
+            }
+
+        }
+
+        public void InitDiamondsToCatch()
+        {
+            List<Path> paths = this.graph.knownPaths;
+            Node node = null;
+            foreach (Path path in paths)
+            {
+                node = path.getGoalNode();
+                if (node.type == Node.Type.Diamond)
+                {
+                    diamondsToCatch.Add(node);
+                }
+            }
+        }
     }
 }
 

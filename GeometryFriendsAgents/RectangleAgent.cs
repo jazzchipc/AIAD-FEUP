@@ -39,6 +39,8 @@ namespace GeometryFriendsAgents
 
         private List<AgentMessage> messages;
 
+        private List<Node> diamondsToCatch;
+
         //Area of the game screen
         protected Rectangle area;
 
@@ -69,6 +71,7 @@ namespace GeometryFriendsAgents
 
             //messages exchange
             messages = new List<AgentMessage>();
+            diamondsToCatch = new List<Node>();
         }
 
 
@@ -90,9 +93,11 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
+            InitDiamondsToCatch();
+
             //DebugSensorsInfo();
         }
-              
+
         // See SensorsUpdated@CicleAgent.cs for parameter details
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
@@ -286,10 +291,11 @@ namespace GeometryFriendsAgents
         {
             bool validRequest = ValidRequest(request);
             Answer.Type answerType;
+            Object attachment = null;
 
             if (validRequest)
             {
-                request.command.execute(this);
+                attachment = request.command.execute(this);
                 answerType = Answer.Type.YES;
             }
             else
@@ -297,7 +303,7 @@ namespace GeometryFriendsAgents
                 answerType = Answer.Type.NO;
             }
 
-            Answer answer = new Answer(answerType, request.id);
+            Answer answer = new Answer(answerType, request.id, attachment);
             this.messages.Add(answer.message);
         }
 
@@ -339,6 +345,35 @@ namespace GeometryFriendsAgents
             this.currentAction = Moves.MORPH_UP;
         }
 
+        public Path getCheapestPath()
+        {
+            return this.graph.getCheapestPath();
+        }
+
+        public void catchDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Apanhar o diamante: " + node.location);
+            //fazer algo para o retangulo apanhar este diamante
+        }
+
+        public void catchNewDiamond(Node node)
+        {
+            diamondsToCatch.Remove(node);
+        }
+
+        public void InitDiamondsToCatch()
+        {
+            List<Path> paths = this.graph.knownPaths;
+            Node node = null;
+            foreach (Path path in paths)
+            {
+                node = path.getGoalNode();
+                if (node.type == Node.Type.Diamond)
+                {
+                    diamondsToCatch.Add(node);
+                }
+            }
+        }
     }
 
 }
