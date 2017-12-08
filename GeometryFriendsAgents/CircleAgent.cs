@@ -65,8 +65,13 @@ namespace GeometryFriendsAgents
         int iterationCount = 0;
         int moveStep = 4;
 
+        // A star initial setup
         Matrix matrix;
         Graph graph;
+        
+        // Diamond to get
+        int nextDiamondIndex;
+        Path nextDiamondPath;
 
         //Communication settings
         Queue<Request> requests;
@@ -139,7 +144,11 @@ namespace GeometryFriendsAgents
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
-            this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
+            this.runAStarForInitialPaths(rI, cI, oI, rPI, cPI, colI, area);
+
+            // TODO: Change this
+            this.nextDiamondIndex = 0;
+
 
             this.pathsToFollowStateMachine();
 
@@ -170,7 +179,11 @@ namespace GeometryFriendsAgents
             lock (remaining)
             {
                 this.remaining = new List<CollectibleRepresentation>(collectiblesInfo);
+                
             }
+
+            this.updateAStar(rI, cI);
+            
 
             //DebugSensorsInfo();
         }
@@ -307,6 +320,9 @@ namespace GeometryFriendsAgents
                     // see path created by A*
                     this.graph.showAllKnownPaths(newDebugInfo, this.type);
 
+                    // see current path
+                    Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
+                    
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
                     foreach (CollectibleRepresentation item in simCaughtCollectibles)
@@ -400,7 +416,7 @@ namespace GeometryFriendsAgents
         /// <summary>
         /// Generates matrix describing the level and runs A star to find paths to every diamond
         /// </summary>
-        private void runAStar(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
+        private void runAStarForInitialPaths(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
             // create game matrix
             this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
@@ -426,6 +442,16 @@ namespace GeometryFriendsAgents
                 }
             }
 
+        }
+
+        private void updateAStar(RectangleRepresentation rI, CircleRepresentation cI)
+        {
+            this.matrix.updateMatrix(rI, cI);
+            this.graph.updateGraph(rI, cI);
+
+            SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
+            PathFinder pathFinder = new PathFinder(searchParameters, this.type);
+            this.nextDiamondPath = pathFinder.FindPath();
         }
 
         /**

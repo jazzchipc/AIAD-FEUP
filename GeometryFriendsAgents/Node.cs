@@ -46,7 +46,7 @@ namespace GeometryFriendsAgents
         /// <summary>
         /// The node's location in the grid
         /// </summary>
-        public Point location { get; private set; }
+        public Point location { get; set; }
 
         /// <summary>
         /// The type of pixel that the node represents.
