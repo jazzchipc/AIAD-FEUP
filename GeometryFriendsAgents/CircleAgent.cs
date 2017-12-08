@@ -286,11 +286,11 @@ namespace GeometryFriendsAgents
                     }
                     foreach (CollectibleRepresentation item in toRemove)
                     {
-                        uncaughtCollectibles.Remove(item);
                         //PARA TESTAR
-                        Point point = new Point((int)item.X, (int)item.Y);
-                        Node node = diamondsToCatch.Find(nodeTmp => nodeTmp.location == point);
+                        Node node = this.graph.diamondNodes[nextDiamondIndex];
                         catchNextDiamond(node);
+
+                        uncaughtCollectibles.Remove(item);
                     }
                 }
             }
