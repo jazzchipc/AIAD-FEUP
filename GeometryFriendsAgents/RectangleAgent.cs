@@ -218,6 +218,8 @@ namespace GeometryFriendsAgents
 
             this.debugInfo = newDebugInfo.ToArray();
 
+            currentAction = MoveToPosition(this.collectiblesInfo[0].X);
+
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
@@ -454,6 +456,26 @@ namespace GeometryFriendsAgents
                 move = Moves.MOVE_RIGHT;
             }
             else if (rectanglePredictedPositionToObjectiveX > positionMargin)
+            {
+                move = Moves.MOVE_LEFT;
+            }
+            else
+            {
+                move = HoldGround();
+            }
+
+            return move;
+        }
+
+        public Moves HoldGround()
+        {
+            Moves move = Moves.NO_ACTION;
+
+            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
+            {
+                move = Moves.MOVE_RIGHT;
+            }
+            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
             {
                 move = Moves.MOVE_LEFT;
             }

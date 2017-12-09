@@ -8,7 +8,6 @@ using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading;
 
 namespace GeometryFriendsAgents
 {
@@ -239,7 +238,13 @@ namespace GeometryFriendsAgents
                 //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
                 //currentAction = this.JumpOntoRectangle();
                 //currentAction = this.Launch();
-                currentAction = this.RollToPosition(this.collectiblesInfo[0].X, this.collectiblesInfo[0].Y);
+                //currentAction = this.RollToPosition(this.collectiblesInfo[0].X, this.collectiblesInfo[0].Y);
+                /*currentAction = this.JumpAboveObstacle(new ObstacleRepresentation(
+                    this.rectangleInfo.X, this.rectangleInfo.Y, 
+                    Utils.getRectangleWidth(this.rectangleInfo.Height), this.rectangleInfo.Height));*/
+
+                //SendRectangleToPosition(1900, this.rectangleInfo.X);
+
 
                 //this.jumpOntoCoopStateMachine();
             }
@@ -570,6 +575,65 @@ namespace GeometryFriendsAgents
             return move;
         }
 
+        private Moves JumpAboveObstacle(ObstacleRepresentation obstacle)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            float obstacleLeftBound = obstacle.X - obstacle.Width / 2;
+            float obstacleRightBound = obstacle.X + obstacle.Width / 2;
+            float obstacleUpperBound = obstacle.Y - obstacle.Height / 2;
+            float obstacleLowerBound = obstacle.Y + obstacle.Height / 2;
+
+            Status actualStatus = new Status();
+            actualStatus.Update(this.circleInfo, this.rectangleInfo, obstacle, AgentType.Circle, currentAction);
+
+            Utils.Direction directionToRoll;
+            Utils.Direction oppositeDirectionToRoll;
+            Utils.Quantifier speedToRoll;
+            Utils.Quantifier distanceFromObstacle;
+
+            if(actualStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
+            {
+                directionToRoll = Utils.Direction.RIGHT;
+                oppositeDirectionToRoll = Utils.Direction.LEFT;
+                distanceFromObstacle = actualStatus.LEFT_FROM_TARGET;
+            }
+            else if(actualStatus.RIGHT_FROM_TARGET != Utils.Quantifier.NONE)
+            {
+                directionToRoll = Utils.Direction.LEFT;
+                oppositeDirectionToRoll = Utils.Direction.RIGHT;
+                distanceFromObstacle = actualStatus.RIGHT_FROM_TARGET;
+            }
+            else
+            {
+                directionToRoll = Utils.Direction.LEFT; //Default
+                oppositeDirectionToRoll = Utils.Direction.LEFT; //Default
+                distanceFromObstacle = Utils.Quantifier.NONE;
+            }
+
+            if(distanceFromObstacle == Utils.Quantifier.SLIGHTLY) 
+            {
+                if(actualStatus.MOVING_TOWARDS_TARGET > Utils.Quantifier.SLIGHTLY) //jumps if has enough speed
+                {
+                    move = Moves.JUMP;
+                }
+                else //Goes backward to have enough distance to gain speed
+                {
+                    move = Roll(oppositeDirectionToRoll, Utils.Quantifier.A_LOT);
+                }
+            }
+            else if(distanceFromObstacle == Utils.Quantifier.NONE)
+            {
+                move = Moves.NO_ACTION;
+            }
+            else
+            {
+                move = Roll(directionToRoll, distanceFromObstacle);
+            }
+
+            return move;
+        }
+
         private Moves RollToPosition(float x, float y)
         {
             Moves move = Moves.NO_ACTION;
@@ -600,6 +664,10 @@ namespace GeometryFriendsAgents
             if(distanceFromTarget != Utils.Quantifier.NONE)
             {
                 move = Roll(rollDirection, distanceFromTarget);
+            }
+            else
+            {
+                move = HoldGround();
             }
 
             return move;
@@ -854,7 +922,8 @@ namespace GeometryFriendsAgents
             }
             else
             {
-                this.SendRequest(new Request(new Command.MorphDown()));
+                //this.SendRequest(new Request(new Command.MorphDown()));
+                this.SendRequest(new Request(new Command.MorphUp()));
             }
 
         }
