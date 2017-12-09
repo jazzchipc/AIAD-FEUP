@@ -29,7 +29,7 @@ namespace GeometryFriendsAgents
 
         public bool circleReachesHeightWithJump(Node circleNode, Node diamondToGetNode)
         {
-            int deltaY = -(diamondToGetNode.location.Y - circleNode.location.Y); // symmetric value because of inverted Y-axis
+            int deltaY = -(diamondToGetNode.location.Y - GAME_AREA_HEIGHT); // symmetric value because of inverted Y-axis
             if (deltaY > CIRCLE_JUMP_MAX_HEIGHT)
             {
                 return false;
@@ -45,7 +45,7 @@ namespace GeometryFriendsAgents
 
         public bool rectangleReachesWithMorphUp(Node rectangleNode, Node diamondToGetNode)
         {
-            int deltaY = -(diamondToGetNode.location.Y - rectangleNode.location.Y); // symmetric value because of inverted Y-axis
+            int deltaY = -(diamondToGetNode.location.Y - GAME_AREA_HEIGHT); // symmetric value because of inverted Y-axis
 
             if (deltaY > RECTANGLE_MAX_MORPH_HEIGHT)
             {

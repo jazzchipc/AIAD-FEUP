@@ -452,6 +452,8 @@ namespace GeometryFriendsAgents
             }
         }
 
+        #region A*
+
         /// <summary>
         /// Generates matrix describing the level and runs A star to find paths to every diamond
         /// </summary>
@@ -490,94 +492,9 @@ namespace GeometryFriendsAgents
             this.nextDiamondPath = pathFinder.FindPath();
         }
 
-        /**
-         * PHYSICAL MOVES
-         * */
+        #endregion
 
-        float positionMargin = 10;
-
-        private Moves CircleJumpOntoRectangle(CollectibleRepresentation diamondToCatch)
-        {
-            Moves move = Moves.NO_ACTION;
-
-            float circleX = this.circleInfo.X;
-            float circleY = this.circleInfo.Y;
-
-            float circleVelX = this.circleInfo.VelocityX;
-            float circleVelY = this.circleInfo.VelocityY;
-
-            float diamondX = diamondToCatch.X;
-            float diamondY = diamondToCatch.Y;
-
-            float positionToDiamondX = circleX - diamondX;
-
-            float positionMargin = 10;
-
-            if (this.predictor != null)
-            {
-                if (predictor.CharactersReady() && predictor.SimulationHistoryDebugInformation.Count == 0)
-                {
-                    ActionSimulator sim = predictor;
-                    sim.Update(1);
-
-                    //Representation of the future status
-                    Status futureStatus = new Status();
-                    CircleRepresentation futureCircle = new CircleRepresentation(sim.CirclePositionX, sim.CirclePositionY,
-                        sim.CircleVelocityX, sim.CircleVelocityY, sim.CircleVelocityRadius);
-                    RectangleRepresentation futureRectangle = new RectangleRepresentation(sim.RectanglePositionX, sim.RectanglePositionY,
-                        sim.RectangleVelocityX, sim.RectangleVelocityY, sim.RectangleHeight);
-
-
-                    CircleRepresentation[] circles = new CircleRepresentation[] { futureCircle, new CircleRepresentation() };
-                    RectangleRepresentation[] rectangles = new RectangleRepresentation[] { futureRectangle, new RectangleRepresentation() };
-                    futureStatus.Update(circles, rectangles, diamondToCatch, AgentType.Circle);
-
-                    Log.LogInformation(futureStatus.ToString());
-                    Log.LogInformation(diamondToCatch.ToString());
-                    Log.LogInformation("Actual Circle: " + circleInfo.ToString());
-                    Log.LogInformation("Actual Rectangle: " + rectangleInfo.ToString());
-                    Log.LogInformation("Future Circle: " + futureCircle.ToString());
-                    Log.LogInformation("Future Rectangle: " + futureRectangle.ToString());
-
-                    float rectanglePredictedPositionToDiamondX = sim.RectanglePositionX - diamondX;
-                    float circlePredictedPositionToRectangleX = sim.CirclePositionX - sim.RectanglePositionX;
-                                        
-                    SendRectangleToPosition(diamondToCatch.X, sim.RectanglePositionX);
-               
-                    /*
-                    if(futureStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
-                    {
-                        move = Moves.ROLL_RIGHT;
-                    }
-                    else if(futureStatus.RIGHT_FROM_TARGET != Utils.Quantifier.NONE)
-                    {
-                        move = Moves.ROLL_LEFT;
-                    }
-
-                    if (futureStatus.NEAR_OTHER_AGENT)
-                    {
-                        move = Moves.JUMP;
-                    }*/
-
-
-                    if (futureStatus.MOVING_RIGHT == Utils.Quantifier.A_BIT)
-                    {
-                        move = Moves.NO_ACTION;
-                    }
-                    else if (futureStatus.MOVING_RIGHT == Utils.Quantifier.A_LOT)
-                    {
-                        move = Moves.ROLL_LEFT;
-                    }
-                    else
-                    {
-                        move = Moves.ROLL_RIGHT;
-                    }
-
-                }
-            }
-
-            return move;
-        }
+        #region Physical Moves
 
         private Moves JumpAboveObstacle(ObstacleRepresentation obstacle)
         {
@@ -926,26 +843,9 @@ namespace GeometryFriendsAgents
             return move;
         }
 
-        public void SendRectangleToPosition(float x, float rectanglePredictedPositionX)
-        {
+        #endregion
 
-            float rectanglePredictedPositionToObjectiveX = rectanglePredictedPositionX - x;
-
-            if (rectanglePredictedPositionToObjectiveX < -positionMargin)
-            {
-                this.SendRequest(new Request(new Command.MoveRight()));
-            }
-            else if (rectanglePredictedPositionToObjectiveX > positionMargin)
-            {
-                this.SendRequest(new Request(new Command.MoveLeft()));
-            }
-            else
-            {
-                //this.SendRequest(new Request(new Command.MorphDown()));
-                this.SendRequest(new Request(new Command.MorphUp()));
-            }
-
-        }
+        #region Communication
 
         public void SendRequest(Request request)
         {
@@ -1097,24 +997,7 @@ namespace GeometryFriendsAgents
 
         }
 
-        private void jumpOntoCoopStateMachine()
-        {
-            if (Math.Abs(rectangleInfo.X - this.collectiblesInfo[0].X) > 10)
-                currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
-            else
-            {
-                currentAction = this.Launch();
-            }
-            /*else if (Math.Abs(this.rectangleInfo.X - this.circleInfo.X) < 300 && (!(Math.Abs(this.rectangleInfo.Y - this.circleInfo.Y ) < 10)))
-            {
-                currentAction = this.JumpOntoRectangle();
-            }
-            else
-            {
-                currentAction = this.Launch();
-            }*/
-                
-        }
+        #endregion
     }
 }
 
