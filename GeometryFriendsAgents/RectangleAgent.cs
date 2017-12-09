@@ -1,5 +1,6 @@
 ﻿using GeometryFriends;
 using GeometryFriends.AI;
+using GeometryFriends.AI.ActionSimulation;
 using GeometryFriends.AI.Communication;
 using GeometryFriends.AI.Debug;
 using GeometryFriends.AI.Interfaces;
@@ -60,6 +61,10 @@ namespace GeometryFriendsAgents
         // Movement restrictions
         MovementRestrictions movementRestrictions;
 
+        Status agentStatus;
+
+        float positionMargin = 10;
+
         public RectangleAgent()
         {
             //Change flag if agent is not to be used
@@ -79,6 +84,9 @@ namespace GeometryFriendsAgents
             //messages exchange
             messages = new List<AgentMessage>();
             diamondsToCatch = new List<Node>();
+
+            //status
+            agentStatus = new Status();
         }
 
 
@@ -161,6 +169,11 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
+            if(this.collectiblesInfo.Length > 0)
+            {
+                this.agentStatus.Update(this.circleInfo, this.rectangleInfo, this.collectiblesInfo[0], AgentType.Rectangle, currentAction);
+            }
+
             if (lastMoveTime == 60)
                 lastMoveTime = 0;
 
@@ -428,6 +441,24 @@ namespace GeometryFriendsAgents
                     }
                 }
             }
+        }
+
+        public Moves MoveToPosition(float x)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            float rectanglePredictedPositionToObjectiveX = this.rectangleInfo.X - x;
+
+            if (rectanglePredictedPositionToObjectiveX < -positionMargin)
+            {
+                move = Moves.MOVE_RIGHT;
+            }
+            else if (rectanglePredictedPositionToObjectiveX > positionMargin)
+            {
+                move = Moves.MOVE_LEFT;
+            }
+
+            return move;
         }
     }
 
