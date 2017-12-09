@@ -63,7 +63,8 @@ namespace GeometryFriendsAgents
 
         Status agentStatus;
 
-        float positionMargin = 10;
+        // Circle is leader
+        bool moveFromCircle = false;
 
         public RectangleAgent()
         {
@@ -140,28 +141,14 @@ namespace GeometryFriendsAgents
             return agentName;
         }
 
-        //simple algorithm for choosing a random action for the rectangle agent
-        private void RandomAction()
-        {
-            /*
-             Rectangle Actions
-             MOVE_LEFT = 5
-             MOVE_RIGHT = 6
-             MORPH_UP = 7
-             MORPH_DOWN = 8
-            */
-
-            //currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
-
-            //send a message to the circle agent telling what action it chose
-            messages.Add(new AgentMessage("Going to :" + currentAction));
-        }
-
         //implements abstract rectangle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
         public override Moves GetAction()
         {
             if (!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+            {           
                 return currentAction;
+            }
+                
             else
                 return Moves.NO_ACTION;
         }
@@ -172,21 +159,6 @@ namespace GeometryFriendsAgents
             if(this.collectiblesInfo.Length > 0)
             {
                 this.agentStatus.Update(this.circleInfo, this.rectangleInfo, this.collectiblesInfo[0], AgentType.Rectangle, currentAction);
-            }
-
-            if (lastMoveTime == 60)
-                lastMoveTime = 0;
-
-            if ((lastMoveTime) <= (DateTime.Now.Second) && (lastMoveTime < 60))
-            {
-                if (!(DateTime.Now.Second == 59))
-                {
-                    RandomAction();
-                    lastMoveTime = lastMoveTime + 1;
-                    //DebugSensorsInfo();
-                }
-                else
-                    lastMoveTime = 60;
             }
 
             //prepare all the debug information to be passed to the agents manager
@@ -218,7 +190,8 @@ namespace GeometryFriendsAgents
 
             this.debugInfo = newDebugInfo.ToArray();
 
-            currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_DOWN);
+            if(!moveFromCircle)
+                currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_DOWN);
 
         }
 
@@ -377,26 +350,31 @@ namespace GeometryFriendsAgents
          */
         public void MoveLeft()
         {
+            this.moveFromCircle = true;
             this.currentAction = Moves.MOVE_LEFT;
         }
 
         public void MoveRight()
         {
+            this.moveFromCircle = true;
             this.currentAction = Moves.MOVE_RIGHT;
         }
 
         internal void NoAction()
         {
+            this.moveFromCircle = true;
             this.currentAction = Moves.NO_ACTION;
         }
 
         internal void MorphDown()
         {
+            this.moveFromCircle = true;
             this.currentAction = Moves.MORPH_DOWN;
         }
 
         internal void MorphUp()
         {
+            this.moveFromCircle = true;
             this.currentAction = Moves.MORPH_UP;
         }
 
