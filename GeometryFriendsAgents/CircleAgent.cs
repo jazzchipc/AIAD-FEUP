@@ -185,7 +185,8 @@ namespace GeometryFriendsAgents
 
             }
 
-            this.updateAStar(rI, cI);
+            if(!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                this.updateAStar(rI, cI);
 
 
             //DebugSensorsInfo();
@@ -256,7 +257,10 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
         public override Moves GetAction()
         {
-            return currentAction;
+            if (!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                return currentAction;
+            else
+                return Moves.NO_ACTION;
         }
 
         //implements abstract circle interface: updates the agent state logic and predictions
@@ -333,11 +337,14 @@ namespace GeometryFriendsAgents
 
                     // see nodes considered by A*
                     Graph.ShowNodes(newDebugInfo, this.graph);
-                    // see path created by A*
-                    this.graph.showAllKnownPaths(newDebugInfo, this.type);
+                   
+                    // see initial paths created by A*
+                    if(Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                        this.graph.showAllKnownPaths(newDebugInfo, this.type);
 
-                    // see current path
-                    Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
+                    //see current path
+                    else
+                        Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
 
 
                     //create additional debug information to visualize collectibles that have been predicted to be caught by the simulator
@@ -443,7 +450,7 @@ namespace GeometryFriendsAgents
 
             // create node graph
             this.graph = new Graph(this.type, this.matrix);
-            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI);
+            this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI, this.type);
             this.graph.generateAdjacencyMatrix(this.matrix);
 
             for (int i = 0; i < this.graph.diamondNodes.Count; i++)    // find shortest path to every node
@@ -956,7 +963,11 @@ namespace GeometryFriendsAgents
                 node = path.getGoalNode();
                 if (node.type == Node.Type.Diamond)
                 {
-                    if (this.movementRestrictions.canCircleGet(this.graph.circleNode, node))    // if he can reach with his moves
+                    if(Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                    {
+                        diamondsToCatch.Add(node);
+                    }
+                    else if (this.movementRestrictions.canCircleGet(this.graph.circleNode, node))    // if he can reach with his moves
                     {
                         diamondsToCatch.Add(node);
                     }

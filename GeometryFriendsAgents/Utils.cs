@@ -7,6 +7,7 @@ namespace GeometryFriendsAgents
 {
     public class Utils
     {
+        public static bool AIAD_DEMO_A_STAR_INITIAL_PATHS = false;
         public static float getRectangleWidth(float height)
         {
             float squareWidth = 100;
