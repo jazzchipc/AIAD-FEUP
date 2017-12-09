@@ -448,20 +448,74 @@ namespace GeometryFriendsAgents
         public Moves MoveToPosition(float x)
         {
             Moves move = Moves.NO_ACTION;
+            float arbitrary_value = 300;
 
-            float rectanglePredictedPositionToObjectiveX = this.rectangleInfo.X - x;
+            Status rectangleStatus = new Status();
+            CollectibleRepresentation target = new CollectibleRepresentation(x, arbitrary_value);
+            rectangleStatus.Update(this.circleInfo, this.rectangleInfo, target, AgentType.Rectangle, currentAction);
 
-            if (rectanglePredictedPositionToObjectiveX < -positionMargin)
+            Utils.Direction moveDirection;
+            Utils.Quantifier distanceFromTarget;
+
+            if (rectangleStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
             {
-                move = Moves.MOVE_RIGHT;
+                moveDirection = Utils.Direction.RIGHT;
+                distanceFromTarget = rectangleStatus.LEFT_FROM_TARGET;
             }
-            else if (rectanglePredictedPositionToObjectiveX > positionMargin)
+            else if (rectangleStatus.RIGHT_FROM_TARGET != Utils.Quantifier.NONE)
             {
-                move = Moves.MOVE_LEFT;
+                moveDirection = Utils.Direction.LEFT;
+                distanceFromTarget = rectangleStatus.RIGHT_FROM_TARGET;
+            }
+            else
+            {
+                moveDirection = Utils.Direction.LEFT; //Just default value
+                distanceFromTarget = Utils.Quantifier.NONE;
+            }
+               
+            if(distanceFromTarget != Utils.Quantifier.NONE)
+            {
+                move = Move(moveDirection, distanceFromTarget);
             }
             else
             {
                 move = HoldGround();
+            }
+
+            return move;
+        }
+
+        public Moves Move(Utils.Direction direction, Utils.Quantifier speed)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            Utils.Quantifier Moving_In_Pretended_Direction;
+            Moves Move_Direction, Move_Oposite_Direction;
+
+            if(direction == Utils.Direction.RIGHT)
+            {
+                Moving_In_Pretended_Direction = this.agentStatus.MOVING_RIGHT;
+                Move_Direction = Moves.MOVE_RIGHT;
+                Move_Oposite_Direction = Moves.MOVE_LEFT;
+            }
+            else
+            {
+                Moving_In_Pretended_Direction = this.agentStatus.MOVING_LEFT;
+                Move_Direction = Moves.MOVE_LEFT;
+                Move_Oposite_Direction = Moves.MOVE_RIGHT;
+            }
+
+            if(Moving_In_Pretended_Direction == speed + 1) //TODO REDUDANT, NEEDS TO REFACTOR. I JUST COPIED IT FROM CIRCLE XD
+            {
+                move = Move_Oposite_Direction;
+            }
+            else if(Moving_In_Pretended_Direction <= speed)
+            {
+                move = Move_Direction;
+            }
+            else
+            {
+                move = Move_Oposite_Direction;
             }
 
             return move;

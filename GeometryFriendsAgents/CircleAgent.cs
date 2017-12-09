@@ -645,6 +645,7 @@ namespace GeometryFriendsAgents
             Utils.Direction rollDirection;
             Utils.Quantifier distanceFromTarget;
 
+            //Definition of rollDirection and distanceFromTarget
             if(circleStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
             {
                 rollDirection = Utils.Direction.RIGHT;
@@ -661,6 +662,7 @@ namespace GeometryFriendsAgents
                 distanceFromTarget = Utils.Quantifier.NONE;
             }
 
+            //Move decision
             if(distanceFromTarget != Utils.Quantifier.NONE)
             {
                 move = Roll(rollDirection, distanceFromTarget);
