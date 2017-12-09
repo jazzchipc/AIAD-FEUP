@@ -218,7 +218,7 @@ namespace GeometryFriendsAgents
 
             this.debugInfo = newDebugInfo.ToArray();
 
-            currentAction = MoveToPosition(this.collectiblesInfo[0].X);
+            currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_UP);
 
         }
 
@@ -485,6 +485,26 @@ namespace GeometryFriendsAgents
             return move;
         }
 
+        public Moves MoveToPosition(float x, Moves morph)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            if(morph == Moves.MORPH_UP || morph == Moves.MORPH_DOWN)
+            {
+                move = MoveToPosition(x);
+                if(move == Moves.NO_ACTION)
+                {
+                    move = morph;
+                }
+            }
+            else
+            {
+                move = MoveToPosition(x);
+            }
+
+            return move;
+        }
+
         public Moves Move(Utils.Direction direction, Utils.Quantifier speed)
         {
             Moves move = Moves.NO_ACTION;
@@ -532,6 +552,29 @@ namespace GeometryFriendsAgents
             else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
             {
                 move = Moves.MOVE_LEFT;
+            }
+
+            return move;
+        }
+
+        public Moves HoldGround(Moves morph)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            if(morph == Moves.MORPH_UP || morph == Moves.MORPH_DOWN)
+            {
+                if(this.agentStatus.MOVING)
+                {
+                    move = HoldGround();
+                }
+                else
+                {
+                    move = morph;
+                }
+            }
+            else
+            {
+                move = HoldGround();
             }
 
             return move;
