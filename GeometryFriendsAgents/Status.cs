@@ -50,7 +50,7 @@ namespace GeometryFriendsAgents
         //TODO CHANGE THE SPEEDS
         private float a_lot_speed = 100;
         private float a_bit_speed = 40;
-        private float slight_speed = 5;
+        private float slight_speed = 10;
         //TODO Implement a velocity margin
 
         private float penetration_margin = 0.08F;
@@ -81,6 +81,7 @@ namespace GeometryFriendsAgents
         public Quantifier MOVING_UP { get => Moving_Up; set => Moving_Up = value; }
         public Moves ACTUAL_MOVE { get => actualMove; set => actualMove = value; }
         public Quantifier MOVING_DOWN { get => Moving_Down; set => Moving_Down = value; }
+        public bool BLOCKED { get => Blocked; set => Blocked = value; }
 
         //This function only cares for the current Agent
 
@@ -161,8 +162,18 @@ namespace GeometryFriendsAgents
         {
             this.ACTUAL_MOVE = actualMove;
             this.Update(circle, rectangle, obstacle, thisAgent);
+            this.checkBlocked();
         }
-        
+
+        public void Update(CircleRepresentation circle, RectangleRepresentation rectangle, CollectibleRepresentation diamondToCatch,
+            AgentType thisAgent, Moves actualMove)
+        {
+            this.ACTUAL_MOVE = actualMove;
+            this.Update(circle, rectangle, diamondToCatch, thisAgent);
+            this.checkBlocked();
+        }
+
+
         private void compareAgentWithTarget(float agentXposition, float agentYposition, float targetXposition, float targetYposition)
         {
             float targetRightBound = targetXposition + obstacle_margin_X - penetration_margin;
@@ -612,11 +623,11 @@ namespace GeometryFriendsAgents
             {
                 if(!this.MOVING)
                 {
-                    this.Blocked = true;
+                    this.BLOCKED = true;
                 }
                 else
                 {
-                    this.Blocked = false;
+                    this.BLOCKED = false;
                 }
             }
         }
@@ -627,7 +638,7 @@ namespace GeometryFriendsAgents
                 + "RIGHT FROM TARGET: " + Right_From_Target.ToString() + " | "
                 + "ABOVE TARGET: " + Above_Target.ToString() + " | "
                 + "BELOW TARGET: " + Below_Target.ToString() + " | "
-                + "NEAR_TARGET: " + Near_Target.ToString() +  " | "
+                + "NEAR_TARGET: " + Near_Target.ToString() + " | "
                 + "WITH OBSTACLE BETWEEN: " + With_Obstacle_Between.ToString() + " | "
                 + "ABOVE OTHER AGENT: " + Above_Other_Agent.ToString() + " | "
                 + "BELOW OTHER AGENT: " + Below_Other_Agent.ToString() + " | "
@@ -642,7 +653,8 @@ namespace GeometryFriendsAgents
                 + "MOVING LEFT: " + Moving_Left.ToString() + " | "
                 + "MOVING RIGHT: " + Moving_Right.ToString() + " | "
                 + "MOVING UP: " + Moving_Up.ToString() + " | "
-                + "MOVING TOWARDS TARGET: " + Moving_Towards_Target.ToString(); 
+                + "MOVING TOWARDS TARGET: " + Moving_Towards_Target.ToString() + " | "
+                + "BLOCKED: " + Blocked.ToString();
         }
 
         //Number of flags should be 4 (Above, Below, Right, Left)

@@ -232,13 +232,15 @@ namespace GeometryFriendsAgents
             }
             else
             {
-                this.agentStatus.Update(circles, rectangles, this.collectiblesInfo[0], AgentType.Circle);
+                this.agentStatus.Update(circles[0], rectangles[0], this.collectiblesInfo[0], AgentType.Circle, currentAction);
+                Log.LogInformation(this.agentStatus.ToString());
 
                 //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
                 //currentAction = this.JumpOntoRectangle();
                 //currentAction = this.Launch();
+                currentAction = this.Roll(Utils.Direction.RIGHT, Utils.Quantifier.A_LOT);
 
-                this.jumpOntoCoopStateMachine();
+                //this.jumpOntoCoopStateMachine();
             }
 
             //send a message to the rectangle agent telling what action it chose
