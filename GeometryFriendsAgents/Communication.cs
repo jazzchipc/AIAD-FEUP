@@ -140,5 +140,23 @@ namespace GeometryFriendsAgents
                 return null;
             }
         }
+
+        public class MoveToPosition : Command
+        {
+            float x;
+            GeometryFriends.AI.Moves move;
+
+            public MoveToPosition(float x, GeometryFriends.AI.Moves move)
+            {
+                this.x = x;
+                this.move = move;
+            }
+
+            public override Object execute(RectangleAgent executor)
+            {
+                executor.MoveToPosition(x, move);
+                return null;
+            }
+        }
     }
 }

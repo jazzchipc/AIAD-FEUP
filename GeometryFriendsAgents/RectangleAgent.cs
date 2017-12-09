@@ -63,9 +63,6 @@ namespace GeometryFriendsAgents
 
         Status agentStatus;
 
-        // Circle is leader
-        bool moveFromCircle = false;
-
         public RectangleAgent()
         {
             //Change flag if agent is not to be used
@@ -189,10 +186,6 @@ namespace GeometryFriendsAgents
             }
 
             this.debugInfo = newDebugInfo.ToArray();
-
-            if(!moveFromCircle)
-                currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_DOWN);
-
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
@@ -350,31 +343,26 @@ namespace GeometryFriendsAgents
          */
         public void MoveLeft()
         {
-            this.moveFromCircle = true;
             this.currentAction = Moves.MOVE_LEFT;
         }
 
         public void MoveRight()
-        {
-            this.moveFromCircle = true;
+        {     
             this.currentAction = Moves.MOVE_RIGHT;
         }
 
         internal void NoAction()
         {
-            this.moveFromCircle = true;
             this.currentAction = Moves.NO_ACTION;
         }
 
         internal void MorphDown()
         {
-            this.moveFromCircle = true;
             this.currentAction = Moves.MORPH_DOWN;
         }
 
         internal void MorphUp()
         {
-            this.moveFromCircle = true;
             this.currentAction = Moves.MORPH_UP;
         }
 
@@ -463,7 +451,7 @@ namespace GeometryFriendsAgents
             return move;
         }
 
-        public Moves MoveToPosition(float x, Moves morph)
+        public void MoveToPosition(float x, Moves morph)
         {
             Moves move = Moves.NO_ACTION;
 
@@ -480,7 +468,7 @@ namespace GeometryFriendsAgents
                 move = MoveToPosition(x);
             }
 
-            return move;
+            this.currentAction = move;
         }
 
         public Moves Move(Utils.Direction direction, Utils.Quantifier speed)
