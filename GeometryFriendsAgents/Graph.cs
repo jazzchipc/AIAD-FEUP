@@ -235,12 +235,12 @@ namespace GeometryFriendsAgents
                 agentDebugList.Add(DebugInformationFactory.CreateLineDebugInfo(path[i].location, path[i + 1].location, color));
             }
         }
-        public Path getCheapestPath()
+        public Path getCheapestPath(List<Node> diamondsToGet)
         {
             Path cheapestPath = null;
             foreach (Path path in knownPaths)
             {
-                if (cheapestPath == null || cheapestPath.totalCost > path.totalCost)
+                if ((cheapestPath == null || cheapestPath.totalCost > path.totalCost) && diamondsToGet.Contains(path.getGoalNode()))
                     cheapestPath = path;
             }
 

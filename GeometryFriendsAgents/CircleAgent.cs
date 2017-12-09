@@ -70,8 +70,9 @@ namespace GeometryFriendsAgents
         Graph graph;
 
         // Diamond to get
-        int nextDiamondIndex;
+        int nextDiamondIndex = -1;
         Path nextDiamondPath;
+        Node nextDiamond;
 
         //Communication settings
         Queue<Request> requests;
@@ -80,7 +81,7 @@ namespace GeometryFriendsAgents
         Status agentStatus;
 
         // Movement restrictions
-        MovementRestrictions movementRestrictions;
+        MovementAnalyser movementAnalyser;
 
         private bool Jumping = false;
 
@@ -148,12 +149,19 @@ namespace GeometryFriendsAgents
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
             this.messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.AliceBlue)));
 
+            // create game matrix
+            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
+
+            // create graph with reachable paths according to A*
             this.runAStarForInitialPaths(rI, cI, oI, rPI, cPI, colI, area);
 
-            this.movementRestrictions = new MovementRestrictions(this.matrix);
+            // create restrictions related to movement according to level data
+            this.movementAnalyser = new MovementAnalyser(this.matrix);
 
-            InitDiamondsToCatch();
+            // initialize the diamonds to catch according to the A* known paths and movement restrictions
+            this.initDiamondsToCatch();
 
+            // initialize state machine to catch diamonds
             this.pathsToFollowStateMachine();
 
             DebugSensorsInfo();
@@ -187,7 +195,6 @@ namespace GeometryFriendsAgents
             if(!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
                 this.updateAStar(rI, cI);
 
-
             //DebugSensorsInfo();
         }
 
@@ -219,8 +226,6 @@ namespace GeometryFriendsAgents
              JUMP = 3
              GROW = 4
             */
-
-            //currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
 
             //Update Status
             CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
@@ -254,8 +259,8 @@ namespace GeometryFriendsAgents
             {
                 messages.Add(new AgentMessage("Going to :" + currentAction));
             }
+
             Log.LogInformation(this.circleInfo.ToString());
-            //Log.LogInformation(this.obstaclesInfo[0].ToString());
         }
 
 
@@ -299,7 +304,7 @@ namespace GeometryFriendsAgents
                     {
                         //PARA TESTAR
                         Node node = this.graph.diamondNodes[nextDiamondIndex];
-                        catchNextDiamond(node);
+                        updateNextDiamond(node);
 
                         uncaughtCollectibles.Remove(item);
                     }
@@ -450,9 +455,6 @@ namespace GeometryFriendsAgents
         /// </summary>
         private void runAStarForInitialPaths(RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area)
         {
-            // create game matrix
-            this.matrix = Matrix.generateMatrixFomGameInfo(rI, cI, oI, rPI, cPI, colI, area);
-
             // create node graph
             this.graph = new Graph(this.type, this.matrix);
             this.graph.generateNodes(rI, cI, oI, rPI, cPI, colI, this.type);
@@ -961,10 +963,10 @@ namespace GeometryFriendsAgents
         private void decidePaths(Path attachment)
         {
             Node rectangleNode = attachment.getGoalNode();
-            Node circleNode = this.graph.getCheapestPath().getGoalNode();
+            Node circleNode = this.graph.getCheapestPath(diamondsToCatch).getGoalNode();
 
             float rectangleDistance = attachment.totalCost;
-            float circleDistance = this.graph.getCheapestPath().totalCost;
+            float circleDistance = this.graph.getCheapestPath(diamondsToCatch).totalCost;
 
             if (rectangleNode.Equals(circleNode))
             {
@@ -981,7 +983,7 @@ namespace GeometryFriendsAgents
                 else
                 {
                     SendRequest(new Request(new Command.CatchDiamond(rectangleNode)));
-                    catchNextDiamond(circleNode);
+                    updateNextDiamond(circleNode);
                 }
                 //this.State = ??
 
@@ -1010,49 +1012,74 @@ namespace GeometryFriendsAgents
         public void catchDiamond(Node node)
         {
             System.Diagnostics.Debug.WriteLine("Circulo - Vou apanhar o diamante: " + node.location);
-            int index = this.graph.diamondNodes.IndexOf(node);
-            nextDiamondIndex = index;
+            this.nextDiamond = node;
         }
 
-        public void catchNextDiamond(Node node)
+        public void updateNextDiamond(Node node)
         {
             System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
             diamondsToCatch.Remove(node);
             this.graph.removeFromKnownPaths(node);
 
-            Path path = this.graph.getCheapestPath();
+            Path path = this.graph.getCheapestPath(this.diamondsToCatch);
             if (path != null)
                 catchDiamond(path.getGoalNode());
         }
 
-        public void InitDiamondsToCatch()
+        public void initDiamondsToCatch()
         {
             List<Path> paths = this.graph.knownPaths;
-            Node node = null;
             foreach (Path path in paths)
             {
-                node = path.getGoalNode();
-                if (node.type == Node.Type.Diamond)
+                Node diamondNode = path.getGoalNode();
+                if (this.movementAnalyser.canCircleGet(this.graph.circleNode, diamondNode))
                 {
-                    if(Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                    // Add diamonds that cannot be caught independetly
+                    diamondsToCatch.Add(diamondNode);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Circle cannot reach diamond " + diamondNode + " alone.");
+                }
+            }
+
+            foreach (Node diamondNode in this.graph.diamondNodes)
+            {
+                // If they can be caught independently, don't waste both agents
+                if (!this.diamondsToCatch.Contains(diamondNode))
+                {
+                    if (this.movementAnalyser.canCircleAndRectangleGet(diamondNode))
                     {
-                        diamondsToCatch.Add(node);
+                        // Add diamonds that cannot be caught cooperatively
+                        this.diamondsToCatchCollectivelly.Add(diamondNode);
                     }
-                    else if (this.movementRestrictions.canCircleGet(this.graph.circleNode, node))    // if he can reach with his moves
+                    else
                     {
-                        diamondsToCatch.Add(node);
+                        System.Diagnostics.Debug.WriteLine("The agents won't be able to catch node " + diamondNode + ".");
                     }
                 }
             }
 
-            // Add diamonds that cannot be caught independetly
-            foreach (Node diamondNode in this.graph.diamondNodes)
+            if(this.diamondsToCatch.Count > 0)
             {
-                if (!this.diamondsToCatch.Contains(diamondNode))
-                {
-                    this.diamondsToCatchCollectivelly.Add(diamondNode);
-                }
+                this.nextDiamondPath = this.graph.getCheapestPath(this.diamondsToCatch);
+                this.nextDiamond = this.nextDiamondPath.getGoalNode();
+
+                this.nextDiamondIndex = this.graph.diamondNodes.IndexOf(nextDiamond);
             }
+
+            else if(this.diamondsToCatchCollectivelly.Count > 0)
+            {
+                this.nextDiamondPath = this.graph.getCheapestPath(this.diamondsToCatchCollectivelly);
+                this.nextDiamond = this.nextDiamondPath.getGoalNode();
+
+                this.nextDiamondIndex = this.graph.diamondNodes.IndexOf(nextDiamond);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Circle cannot get any more diamonds.");
+            }
+
         }
 
         private void jumpOntoCoopStateMachine()

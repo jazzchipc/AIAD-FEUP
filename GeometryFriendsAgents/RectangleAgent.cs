@@ -59,7 +59,7 @@ namespace GeometryFriendsAgents
         Path nextDiamondPath;
 
         // Movement restrictions
-        MovementRestrictions movementRestrictions;
+        MovementAnalyser movementRestrictions;
 
         Status agentStatus;
 
@@ -108,7 +108,7 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
-            this.movementRestrictions = new MovementRestrictions(this.matrix);
+            this.movementRestrictions = new MovementAnalyser(this.matrix);
 
             InitDiamondsToCatch();
 
@@ -402,7 +402,7 @@ namespace GeometryFriendsAgents
 
         public Path getCheapestPath()
         {
-            return this.graph.getCheapestPath();
+            return this.graph.getCheapestPath(this.diamondsToCatch);
         }
 
         public void catchDiamond(Node node)
@@ -419,7 +419,7 @@ namespace GeometryFriendsAgents
 
             this.graph.removeFromKnownPaths(node);
             
-            Path path = this.graph.getCheapestPath();
+            Path path = this.graph.getCheapestPath(this.diamondsToCatch);
             if (path != null)
                 catchDiamond(path.getGoalNode());
         }
