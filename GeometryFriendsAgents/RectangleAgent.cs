@@ -218,7 +218,7 @@ namespace GeometryFriendsAgents
 
             this.debugInfo = newDebugInfo.ToArray();
 
-            currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_UP);
+            currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_DOWN);
 
         }
 

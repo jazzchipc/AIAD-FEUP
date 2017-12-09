@@ -239,9 +239,9 @@ namespace GeometryFriendsAgents
                 //currentAction = this.JumpOntoRectangle();
                 //currentAction = this.Launch();
                 //currentAction = this.RollToPosition(this.collectiblesInfo[0].X, this.collectiblesInfo[0].Y);
-                /*currentAction = this.JumpAboveObstacle(new ObstacleRepresentation(
+                currentAction = this.JumpAboveObstacle(new ObstacleRepresentation(
                     this.rectangleInfo.X, this.rectangleInfo.Y, 
-                    Utils.getRectangleWidth(this.rectangleInfo.Height), this.rectangleInfo.Height));*/
+                    Utils.getRectangleWidth(this.rectangleInfo.Height), this.rectangleInfo.Height));
 
                 //SendRectangleToPosition(1900, this.rectangleInfo.X);
 
@@ -611,7 +611,7 @@ namespace GeometryFriendsAgents
                 distanceFromObstacle = Utils.Quantifier.NONE;
             }
 
-            if(distanceFromObstacle == Utils.Quantifier.SLIGHTLY) 
+            if(distanceFromObstacle == Utils.Quantifier.SLIGHTLY || distanceFromObstacle == Utils.Quantifier.A_BIT)
             {
                 if(actualStatus.MOVING_TOWARDS_TARGET > Utils.Quantifier.SLIGHTLY) //jumps if has enough speed
                 {
