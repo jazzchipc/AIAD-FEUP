@@ -183,11 +183,14 @@ namespace GeometryFriendsAgents
             // No need to show duplicated nodes
             // Graph.ShowNodes(newDebugInfo, this.graph);
             // see path created by A*
-            this.graph.showAllKnownPaths(newDebugInfo, this.type);
-
-            // see current path
-            if(this.nextDiamondPath != null)
-                Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
+            if (Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                this.graph.showAllKnownPaths(newDebugInfo, this.type);
+            else
+            {
+                // see current path
+                if (this.nextDiamondPath != null)
+                    Graph.showPath(newDebugInfo, this.nextDiamondPath.path, this.type);
+            }
 
             //List<DebugInformation> debug = new List<DebugInformation>();
             //debug.AddRange(this.debugInfo);
