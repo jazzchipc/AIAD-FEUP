@@ -238,7 +238,7 @@ namespace GeometryFriendsAgents
                 //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
                 //currentAction = this.JumpOntoRectangle();
                 //currentAction = this.Launch();
-                currentAction = this.Roll(Utils.Direction.RIGHT, Utils.Quantifier.A_LOT);
+                currentAction = this.RollToPosition(this.collectiblesInfo[0].X, this.collectiblesInfo[0].Y);
 
                 //this.jumpOntoCoopStateMachine();
             }
@@ -558,6 +558,41 @@ namespace GeometryFriendsAgents
                     }
 
                 }
+            }
+
+            return move;
+        }
+
+        private Moves RollToPosition(float x, float y)
+        {
+            Moves move = Moves.NO_ACTION;
+
+            Status circleStatus = new Status();
+            CollectibleRepresentation target = new CollectibleRepresentation(x, y);
+            circleStatus.Update(circleInfo, rectangleInfo, target, AgentType.Circle, currentAction);
+
+            Utils.Direction rollDirection;
+            Utils.Quantifier distanceFromTarget;
+
+            if(circleStatus.LEFT_FROM_TARGET != Utils.Quantifier.NONE)
+            {
+                rollDirection = Utils.Direction.RIGHT;
+                distanceFromTarget = circleStatus.LEFT_FROM_TARGET;
+            }
+            else if(circleStatus.RIGHT_FROM_TARGET != Utils.Quantifier.NONE)
+            {
+                rollDirection = Utils.Direction.LEFT;
+                distanceFromTarget = circleStatus.RIGHT_FROM_TARGET;
+            }
+            else
+            {
+                rollDirection = Utils.Direction.LEFT; //Just default value
+                distanceFromTarget = Utils.Quantifier.NONE;
+            }
+
+            if(distanceFromTarget != Utils.Quantifier.NONE)
+            {
+                move = Roll(rollDirection, distanceFromTarget);
             }
 
             return move;
