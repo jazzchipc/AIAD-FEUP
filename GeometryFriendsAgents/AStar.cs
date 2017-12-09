@@ -124,6 +124,12 @@ namespace GeometryFriendsAgents
                 openSet.Remove(current);
                 closedSet.Add(current);
 
+                // If it's a diamond and it's not the goal node, the continue, because a path should not go through it
+                if(current.type == Node.Type.Diamond)
+                {
+                    continue;
+                }
+
                 List<Node> nextNodes = this.searchParameters.graph.getAdjacentNodes(current.index);
 
                 // Sort by F-value so that the shortest possible routes are considered first
@@ -141,7 +147,6 @@ namespace GeometryFriendsAgents
                     {
                         openSet.Add(nextNode);
                     }
-
  
                     float traversalCost = Utils.GetTraversalCost(current.location, nextNode.location);
                     float tentativeGCost = current.gCost + traversalCost;

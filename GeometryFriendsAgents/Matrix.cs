@@ -296,7 +296,7 @@ namespace GeometryFriendsAgents
         }
         public bool xInBounds(int x)
         {
-            return (x < this.getWidth() && x > 0);
+            return (x < this.getWidth() && x > 50); // magic numbers... it works tho
         }
 
         public bool yInBounds(int y)
