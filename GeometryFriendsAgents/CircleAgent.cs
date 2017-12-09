@@ -239,21 +239,11 @@ namespace GeometryFriendsAgents
             {
                 this.agentStatus.Update(circles[0], rectangles[0], this.collectiblesInfo[0], AgentType.Circle, currentAction);
                 Log.LogInformation(this.agentStatus.ToString());
-
-                //currentAction = this.CircleJumpOntoRectangle(this.collectiblesInfo[0]);
-                //currentAction = this.JumpOntoRectangle();
-                //currentAction = this.Launch();
-                //currentAction = this.RollToPosition(this.collectiblesInfo[0].X, this.collectiblesInfo[0].Y);
-                //currentAction = this.JumpAboveObstacle(new ObstacleRepresentation(
-                //    this.rectangleInfo.X, this.rectangleInfo.Y, 
-                //    Utils.getRectangleWidth(this.rectangleInfo.Height), this.rectangleInfo.Height));
-
-                currentAction = LaunchCoop(nextDiamond);
-
-                //SendRectangleToPosition(1900, this.rectangleInfo.X);
-
-
-                //this.jumpOntoCoopStateMachine();
+ 
+                if(this.diamondsToCatchCollectivelly.Contains(nextDiamond)) // next diamond has to be caugh cooperatively
+                {
+                    currentAction = LaunchCoop(nextDiamond);
+                }
             }
 
             //send a message to the rectangle agent telling what action it chose
@@ -763,7 +753,15 @@ namespace GeometryFriendsAgents
             if (Math.Abs(this.rectangleInfo.X - diamondToGet.location.X) > 50)
             {
                 this.SendRequest(new Request(new Command.MoveToPosition(diamondToGet.location.X, Moves.MORPH_DOWN)));
-                return Moves.NO_ACTION;
+
+                if (this.agentStatus.BLOCKED == true)
+                {
+                    return Moves.JUMP;
+                }
+                else
+                {
+                    return RollToPosition(rectangleInfo.X, rectangleInfo.Y);
+                }
             }
             else
             {
