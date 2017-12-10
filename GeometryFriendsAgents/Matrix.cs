@@ -195,7 +195,8 @@ namespace GeometryFriendsAgents
 
             int rectangleX = (int)rI.X;
             int rectangleY = (int)rI.Y;
-            int rectangleWidth = (int)rI.Height; // TODO: calculate width from height
+            int rectangleHeight = (int)rI.Height; // TODO: calculate width from height
+            int rectangleWidth = (int)Utils.getRectangleWidth(rectangleHeight);
 
             int circleX = (int)cI.X;
             int circleY = (int)cI.Y;
@@ -204,7 +205,7 @@ namespace GeometryFriendsAgents
             // RECTANGLE update
             for (int x = rectangleX - rectangleWidth / 2; x < rectangleX + rectangleWidth / 2; x++)
             {
-                for (int y = rectangleY - 10 / 2; y < rectangleY + 10 / 2; y++)
+                for (int y = rectangleY - rectangleHeight / 2; y < rectangleY + rectangleHeight / 2; y++)
                 {
                     if (!this.inBounds(x, y)) // x and y out of bounds
                     {
