@@ -737,11 +737,11 @@ namespace GeometryFriendsAgents
         {
             Moves move = Moves.NO_ACTION;
 
-            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
+            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE && (this.circleInfo.X - this.rectangleInfo.X) < -10)
             {
                 move = Moves.ROLL_RIGHT;
             }
-            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
+            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE && (this.circleInfo.X - this.rectangleInfo.X) > 10)
             {
                 move = Moves.ROLL_LEFT;
             }
