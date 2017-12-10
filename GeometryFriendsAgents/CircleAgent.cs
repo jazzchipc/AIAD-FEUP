@@ -162,7 +162,8 @@ namespace GeometryFriendsAgents
             this.initDiamondsToCatch();
 
             // initialize state machine to catch diamonds
-            this.pathsToFollowStateMachine();
+            if(!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                this.pathsToFollowStateMachine();
 
             DebugSensorsInfo();
         }
@@ -227,37 +228,44 @@ namespace GeometryFriendsAgents
              GROW = 4
             */
 
-            //Update Status
-            CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
-            RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
-
-            if (this.collectiblesInfo.Length <= 0)
+            if (Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
             {
-                currentAction = Moves.NO_ACTION;    // collected all
+                currentAction = Moves.NO_ACTION;
             }
             else
             {
-                this.agentStatus.Update(circles[0], rectangles[0], this.collectiblesInfo[0], AgentType.Circle, currentAction);
-                Log.LogInformation(this.agentStatus.ToString());
- 
-                if(this.diamondsToCatchCollectivelly.Contains(nextDiamond)) // next diamond has to be caugh cooperatively
+                //Update Status
+                CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
+                RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
+
+                if (this.collectiblesInfo.Length <= 0)
                 {
-                    currentAction = LaunchCoop(nextDiamond);
+                    currentAction = Moves.NO_ACTION;    // collected all
+                }
+                else
+                {
+                    this.agentStatus.Update(circles[0], rectangles[0], this.collectiblesInfo[0], AgentType.Circle, currentAction);
+                    Log.LogInformation(this.agentStatus.ToString());
+
+                    if (this.diamondsToCatchCollectivelly.Contains(nextDiamond)) // next diamond has to be caugh cooperatively
+                    {
+                        currentAction = LaunchCoop(nextDiamond);
+                    }
+
+                    else if (this.diamondsToCatch.Contains(nextDiamond))
+                    {
+                        currentAction = decideActionFromCurrentPath();
+                    }
                 }
 
-                else if (this.diamondsToCatch.Contains(nextDiamond))
+                //send a message to the rectangle agent telling what action it chose
+                lock (messages)
                 {
-                    currentAction = decideActionFromCurrentPath();
+                    messages.Add(new AgentMessage("Going to :" + currentAction));
                 }
-            }
 
-            //send a message to the rectangle agent telling what action it chose
-            lock (messages)
-            {
-                messages.Add(new AgentMessage("Going to :" + currentAction));
+                Log.LogInformation(this.circleInfo.ToString());
             }
-
-            Log.LogInformation(this.circleInfo.ToString());
         }
 
 
