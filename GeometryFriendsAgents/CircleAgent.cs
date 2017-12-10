@@ -769,11 +769,11 @@ namespace GeometryFriendsAgents
             Moves move = Moves.NO_ACTION;
 
             // bananas
-            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE && (this.circleInfo.X - this.rectangleInfo.X) < -10)
+            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
             {
                 move = Moves.ROLL_RIGHT;
             }
-            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE && (this.circleInfo.X - this.rectangleInfo.X) > 10)
+            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
             {
                 move = Moves.ROLL_LEFT;
             }
