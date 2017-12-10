@@ -40,7 +40,8 @@ namespace GeometryFriendsAgents
 
         public bool canRectangleGet(Node rectangleNode, Node diamondToGetNode)
         {
-            return this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode);
+            return (this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode) ||
+                       this.rectangleBlockedByPlatform(rectangleNode, diamondToGetNode));
         }
 
         public bool rectangleReachesWithMorphUp(Node rectangleNode, Node diamondToGetNode)
@@ -54,6 +55,21 @@ namespace GeometryFriendsAgents
 
             return true;
         }
+        public bool rectangleBlockedByPlatform(Node rectangleNode, Node diamondToGetNode)
+        {
+ 
+            for(int i = System.Math.Min(rectangleNode.location.X, diamondToGetNode.location.X); i < System.Math.Max(rectangleNode.location.X, diamondToGetNode.location.X); i++)
+            {
+                if(this.matrix.getPixel(i, rectangleNode.location.Y).type == Pixel.Type.CirclePlatform ||
+                    this.matrix.getPixel(i, rectangleNode.location.Y).type == Pixel.Type.Obstacle)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
 
         public bool canCircleAndRectangleGet(Node diamondToGet)
         {
