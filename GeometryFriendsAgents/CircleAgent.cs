@@ -931,10 +931,30 @@ namespace GeometryFriendsAgents
         public void updateNextDiamond(Node node)
         {
             System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
-            diamondsToCatch.Remove(node);
+
+            if (this.diamondsToCatch.Contains(node))
+            {
+                this.diamondsToCatch.Remove(node);
+            }
+
+            if (this.diamondsToCatchCollectivelly.Contains(node))
+            {
+                this.diamondsToCatchCollectivelly.Remove(node);
+            }
+            
             this.graph.removeFromKnownPaths(node);
 
-            Path path = this.graph.getCheapestPath(this.diamondsToCatch);
+            Path path = null;
+
+            if (this.diamondsToCatch.Count > 0)
+            {
+                path = this.graph.getCheapestPath(this.diamondsToCatch);
+            }
+            else if (this.diamondsToCatchCollectivelly.Count > 0)
+            {
+                path = this.graph.getCheapestPath(this.diamondsToCatchCollectivelly);
+            }
+
             if (path != null)
                 catchDiamond(path.getGoalNode());
         }
