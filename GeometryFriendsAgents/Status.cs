@@ -630,6 +630,10 @@ namespace GeometryFriendsAgents
                     this.BLOCKED = false;
                 }
             }
+            else
+            {
+                this.BLOCKED = false;
+            }
         }
 
         public override string ToString()
