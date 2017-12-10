@@ -7,6 +7,9 @@ namespace GeometryFriendsAgents
 {
     public class Utils
     {
+        /// <summary>
+        /// Special bool for AIAD demonstration. Should be true ONLY on demo or to test A*. Otherwise, it should be false.
+        /// </summary>
         public static bool AIAD_DEMO_A_STAR_INITIAL_PATHS = false;
         public static float getRectangleWidth(float height)
         {

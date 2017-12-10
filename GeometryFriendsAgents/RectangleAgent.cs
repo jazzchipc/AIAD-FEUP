@@ -59,11 +59,9 @@ namespace GeometryFriendsAgents
         Path nextDiamondPath;
 
         // Movement restrictions
-        MovementRestrictions movementRestrictions;
+        MovementAnalyser movementRestrictions;
 
         Status agentStatus;
-
-        float positionMargin = 10;
 
         public RectangleAgent()
         {
@@ -108,7 +106,7 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
-            this.movementRestrictions = new MovementRestrictions(this.matrix);
+            this.movementRestrictions = new MovementAnalyser(this.matrix);
 
             InitDiamondsToCatch();
 
@@ -140,28 +138,14 @@ namespace GeometryFriendsAgents
             return agentName;
         }
 
-        //simple algorithm for choosing a random action for the rectangle agent
-        private void RandomAction()
-        {
-            /*
-             Rectangle Actions
-             MOVE_LEFT = 5
-             MOVE_RIGHT = 6
-             MORPH_UP = 7
-             MORPH_DOWN = 8
-            */
-
-            //currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
-
-            //send a message to the circle agent telling what action it chose
-            messages.Add(new AgentMessage("Going to :" + currentAction));
-        }
-
         //implements abstract rectangle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
         public override Moves GetAction()
         {
             if (!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+            {           
                 return currentAction;
+            }
+                
             else
                 return Moves.NO_ACTION;
         }
@@ -172,21 +156,6 @@ namespace GeometryFriendsAgents
             if(this.collectiblesInfo.Length > 0)
             {
                 this.agentStatus.Update(this.circleInfo, this.rectangleInfo, this.collectiblesInfo[0], AgentType.Rectangle, currentAction);
-            }
-
-            if (lastMoveTime == 60)
-                lastMoveTime = 0;
-
-            if ((lastMoveTime) <= (DateTime.Now.Second) && (lastMoveTime < 60))
-            {
-                if (!(DateTime.Now.Second == 59))
-                {
-                    RandomAction();
-                    lastMoveTime = lastMoveTime + 1;
-                    //DebugSensorsInfo();
-                }
-                else
-                    lastMoveTime = 60;
             }
 
             //prepare all the debug information to be passed to the agents manager
@@ -217,9 +186,6 @@ namespace GeometryFriendsAgents
             }
 
             this.debugInfo = newDebugInfo.ToArray();
-
-            currentAction = MoveToPosition(this.collectiblesInfo[0].X, Moves.MORPH_DOWN);
-
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
@@ -381,7 +347,7 @@ namespace GeometryFriendsAgents
         }
 
         public void MoveRight()
-        {
+        {     
             this.currentAction = Moves.MOVE_RIGHT;
         }
 
@@ -402,7 +368,7 @@ namespace GeometryFriendsAgents
 
         public Path getCheapestPath()
         {
-            return this.graph.getCheapestPath();
+            return this.graph.getCheapestPath(this.diamondsToCatch);
         }
 
         public void catchDiamond(Node node)
@@ -419,7 +385,7 @@ namespace GeometryFriendsAgents
 
             this.graph.removeFromKnownPaths(node);
             
-            Path path = this.graph.getCheapestPath();
+            Path path = this.graph.getCheapestPath(this.diamondsToCatch);
             if (path != null)
                 catchDiamond(path.getGoalNode());
         }
@@ -485,7 +451,7 @@ namespace GeometryFriendsAgents
             return move;
         }
 
-        public Moves MoveToPosition(float x, Moves morph)
+        public void MoveToPosition(float x, Moves morph)
         {
             Moves move = Moves.NO_ACTION;
 
@@ -502,7 +468,7 @@ namespace GeometryFriendsAgents
                 move = MoveToPosition(x);
             }
 
-            return move;
+            this.currentAction = move;
         }
 
         public Moves Move(Utils.Direction direction, Utils.Quantifier speed)
