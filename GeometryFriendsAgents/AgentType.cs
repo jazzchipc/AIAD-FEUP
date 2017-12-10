@@ -1,0 +1,1 @@
+﻿public enum AgentType { Circle, Rectangle };
