@@ -60,8 +60,7 @@ namespace GeometryFriendsAgents
  
             for(int i = System.Math.Min(rectangleNode.location.X, diamondToGetNode.location.X); i < System.Math.Max(rectangleNode.location.X, diamondToGetNode.location.X); i++)
             {
-                if(this.matrix.getPixel(i, rectangleNode.location.Y).type == Pixel.Type.CirclePlatform ||
-                    this.matrix.getPixel(i, rectangleNode.location.Y).type == Pixel.Type.Obstacle)
+                if(this.matrix.getPixel(i, rectangleNode.location.Y).type == Pixel.Type.CirclePlatform)
                 {
                     return false;
                 }
