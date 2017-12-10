@@ -40,7 +40,7 @@ namespace GeometryFriendsAgents
 
         public bool canRectangleGet(Node rectangleNode, Node diamondToGetNode)
         {
-            return (this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode) ||
+            return (this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode) &&
                        this.rectangleBlockedByPlatform(rectangleNode, diamondToGetNode));
         }
 
