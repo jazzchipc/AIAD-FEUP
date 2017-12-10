@@ -875,6 +875,10 @@ namespace GeometryFriendsAgents
             {
                 return Moves.NO_ACTION;
             }
+            else if (this.agentStatus.BLOCKED == true)
+            {
+                return Moves.JUMP;
+            }
             else if (this.nextDiamondPath.path[1].type == Node.Type.RectanglePlatform)
             {
                 return JumpAboveObstacle(this.rectanglePlatformsInfo[2]);
@@ -887,7 +891,6 @@ namespace GeometryFriendsAgents
             {
                 return Moves.JUMP;
             }
-            
 
             return Moves.NO_ACTION;
             
