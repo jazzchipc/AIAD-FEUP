@@ -162,7 +162,8 @@ namespace GeometryFriendsAgents
             this.initDiamondsToCatch();
 
             // initialize state machine to catch diamonds
-            this.pathsToFollowStateMachine();
+            if(!Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
+                this.pathsToFollowStateMachine();
 
             DebugSensorsInfo();
         }
@@ -227,32 +228,44 @@ namespace GeometryFriendsAgents
              GROW = 4
             */
 
-            //Update Status
-            CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
-            RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
-
-            if (this.collectiblesInfo.Length <= 0)
+            if (Utils.AIAD_DEMO_A_STAR_INITIAL_PATHS)
             {
-                currentAction = Moves.NO_ACTION;    // collected all
+                currentAction = Moves.NO_ACTION;
             }
             else
             {
-                this.agentStatus.Update(circles[0], rectangles[0], this.collectiblesInfo[0], AgentType.Circle, currentAction);
-                Log.LogInformation(this.agentStatus.ToString());
- 
-                if(this.diamondsToCatchCollectivelly.Contains(nextDiamond)) // next diamond has to be caugh cooperatively
+                //Update Status
+                CircleRepresentation[] circles = new CircleRepresentation[] { circleInfo, new CircleRepresentation() };
+                RectangleRepresentation[] rectangles = new RectangleRepresentation[] { rectangleInfo, new RectangleRepresentation() };
+
+                if (this.collectiblesInfo.Length <= 0)
                 {
-                    currentAction = LaunchCoop(nextDiamond);
+                    currentAction = Moves.NO_ACTION;    // collected all
                 }
-            }
+                else
+                {
+                    this.agentStatus.Update(circles[0], rectangles[0], this.collectiblesInfo[0], AgentType.Circle, currentAction);
+                    Log.LogInformation(this.agentStatus.ToString());
 
-            //send a message to the rectangle agent telling what action it chose
-            lock (messages)
-            {
-                messages.Add(new AgentMessage("Going to :" + currentAction));
-            }
+                    if (this.diamondsToCatchCollectivelly.Contains(nextDiamond)) // next diamond has to be caugh cooperatively
+                    {
+                        currentAction = LaunchCoop(nextDiamond);
+                    }
 
-            Log.LogInformation(this.circleInfo.ToString());
+                    else if (this.diamondsToCatch.Contains(nextDiamond))
+                    {
+                        currentAction = decideActionFromCurrentPath();
+                    }
+                }
+
+                //send a message to the rectangle agent telling what action it chose
+                lock (messages)
+                {
+                    messages.Add(new AgentMessage("Going to :" + currentAction));
+                }
+
+                Log.LogInformation(this.circleInfo.ToString());
+            }
         }
 
 
@@ -294,11 +307,25 @@ namespace GeometryFriendsAgents
                     }
                     foreach (CollectibleRepresentation item in toRemove)
                     {
-                        //PARA TESTAR
-                        Node node = this.graph.diamondNodes[nextDiamondIndex];
-                        updateNextDiamond(node);
-
                         uncaughtCollectibles.Remove(item);
+
+                        //PARA TESTAR
+                        Node circleNextNode = this.graph.diamondNodes[nextDiamondIndex];
+                        Point point = new Point((int)item.X, (int)item.Y);
+                        Node caughtNode = new Node(point.X, point.Y, Node.Type.Diamond);
+
+
+
+                        if (point == circleNextNode.location)
+                        {
+                            updateNextDiamond(caughtNode);
+                            SendRequest(new Request(new Command.DeleteDiamond(caughtNode)));
+                        }
+                        else
+                        {
+                            SendRequest(new Request(new Command.CatchNextDiamond(caughtNode)));
+                            deleteDiamond(caughtNode);
+                        }
                     }
                 }
             }
@@ -479,7 +506,15 @@ namespace GeometryFriendsAgents
 
             SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
             PathFinder pathFinder = new PathFinder(searchParameters, this.type);
-            this.nextDiamondPath = pathFinder.FindPath();
+
+            for(int i = 0; i < this.graph.knownPaths.Count; i++)
+            {
+                if(this.graph.knownPaths[i].getGoalNode() == this.graph.diamondNodes[nextDiamondIndex])
+                {
+                    this.graph.knownPaths[i] = pathFinder.FindPath();
+                }
+            }
+            
         }
 
         #endregion
@@ -733,11 +768,12 @@ namespace GeometryFriendsAgents
         {
             Moves move = Moves.NO_ACTION;
 
-            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE)
+            // bananas
+            if (this.agentStatus.MOVING_LEFT > Utils.Quantifier.NONE && (this.circleInfo.X - this.rectangleInfo.X) < -10)
             {
                 move = Moves.ROLL_RIGHT;
             }
-            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE)
+            else if (this.agentStatus.MOVING_RIGHT > Utils.Quantifier.NONE && (this.circleInfo.X - this.rectangleInfo.X) > 10)
             {
                 move = Moves.ROLL_LEFT;
             }
@@ -841,6 +877,33 @@ namespace GeometryFriendsAgents
             return move;
         }
 
+        public Moves decideActionFromCurrentPath()
+        {
+            if (this.diamondsToCatch.Count == 0)
+            {
+                return Moves.NO_ACTION;
+            }
+            else if (this.agentStatus.BLOCKED == true)
+            {
+                return Moves.JUMP;
+            }
+            else if (this.nextDiamondPath.path[1].type == Node.Type.RectanglePlatform)
+            {
+                return JumpAboveObstacle(this.rectanglePlatformsInfo[2]);
+            }
+            else if (Math.Abs(this.circleInfo.X - this.nextDiamond.location.X) > 50)
+            {
+                return RollToPosition(this.nextDiamond.location.X, this.nextDiamond.location.Y);
+            }
+            else if(this.circleInfo.Y - this.nextDiamond.location.Y > 50)
+            {
+                return Moves.JUMP;
+            }
+
+            return Moves.NO_ACTION;
+            
+        }
+
         #endregion
 
         #region Communication
@@ -930,19 +993,7 @@ namespace GeometryFriendsAgents
 
         public void updateNextDiamond(Node node)
         {
-            System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
-
-            if (this.diamondsToCatch.Contains(node))
-            {
-                this.diamondsToCatch.Remove(node);
-            }
-
-            if (this.diamondsToCatchCollectivelly.Contains(node))
-            {
-                this.diamondsToCatchCollectivelly.Remove(node);
-            }
-            
-            this.graph.removeFromKnownPaths(node);
+            this.deleteDiamond(node);
 
             Path path = null;
 
@@ -956,7 +1007,27 @@ namespace GeometryFriendsAgents
             }
 
             if (path != null)
+            {
+                this.nextDiamondPath = path;
                 catchDiamond(path.getGoalNode());
+            }
+        }
+
+        public void deleteDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
+
+            if (this.diamondsToCatch.Contains(node))
+            {
+                this.diamondsToCatch.Remove(node);
+            }
+
+            if (this.diamondsToCatchCollectivelly.Contains(node))
+            {
+                this.diamondsToCatchCollectivelly.Remove(node);
+            }
+
+            this.graph.removeFromKnownPaths(node);
         }
 
         public void initDiamondsToCatch()

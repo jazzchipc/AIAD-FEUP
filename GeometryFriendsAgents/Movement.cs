@@ -38,9 +38,24 @@ namespace GeometryFriendsAgents
             return true;
         }
 
+        public bool circleHasPlatformBelowDiamond(Node diamondToGetNode)
+        {
+            for (int i = diamondToGetNode.location.Y; i < diamondToGetNode.location.Y + CIRCLE_JUMP_MAX_HEIGHT + 100; i++)
+            {
+                if (this.matrix.getPixel(diamondToGetNode.location.X, i).type == Pixel.Type.RectanglePlatform ||
+                    this.matrix.getPixel(diamondToGetNode.location.X, i).type == Pixel.Type.Obstacle)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool canRectangleGet(Node rectangleNode, Node diamondToGetNode)
         {
-            return this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode);
+            return (this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode) &&
+                       this.rectangleBlockedByPlatform(rectangleNode, diamondToGetNode));
         }
 
         public bool rectangleReachesWithMorphUp(Node rectangleNode, Node diamondToGetNode)
@@ -54,6 +69,20 @@ namespace GeometryFriendsAgents
 
             return true;
         }
+        public bool rectangleBlockedByPlatform(Node rectangleNode, Node diamondToGetNode)
+        {
+ 
+            for(int i = System.Math.Min(rectangleNode.location.X, diamondToGetNode.location.X); i < System.Math.Max(rectangleNode.location.X, diamondToGetNode.location.X); i++)
+            {
+                if(this.matrix.getPixel(i, rectangleNode.location.Y).type == Pixel.Type.CirclePlatform)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
 
         public bool canCircleAndRectangleGet(Node diamondToGet)
         {
