@@ -244,6 +244,11 @@ namespace GeometryFriendsAgents
                 {
                     currentAction = LaunchCoop(nextDiamond);
                 }
+
+                else if (this.diamondsToCatch.Contains(nextDiamond))
+                {
+                    currentAction = decideActionFromCurrentPath();
+                }
             }
 
             //send a message to the rectangle agent telling what action it chose
@@ -479,7 +484,6 @@ namespace GeometryFriendsAgents
 
             SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
             PathFinder pathFinder = new PathFinder(searchParameters, this.type);
-            this.nextDiamondPath = pathFinder.FindPath();
         }
 
         #endregion
@@ -841,6 +845,25 @@ namespace GeometryFriendsAgents
             return move;
         }
 
+        public Moves decideActionFromCurrentPath()
+        {
+            if(this.diamondsToCatch.Count == 0)
+            {
+                return Moves.NO_ACTION;
+            }
+            if(Math.Abs(this.circleInfo.X - this.nextDiamond.location.X) > 50)
+            {
+                return RollToPosition(this.nextDiamond.location.X, this.nextDiamond.location.Y);
+            }
+            else if(this.circleInfo.Y - this.nextDiamond.location.Y > 50)
+            {
+                return Moves.JUMP;
+            }
+
+            return Moves.NO_ACTION;
+            
+        }
+
         #endregion
 
         #region Communication
@@ -956,7 +979,10 @@ namespace GeometryFriendsAgents
             }
 
             if (path != null)
+            {
+                this.nextDiamondPath = path;
                 catchDiamond(path.getGoalNode());
+            }
         }
 
         public void initDiamondsToCatch()

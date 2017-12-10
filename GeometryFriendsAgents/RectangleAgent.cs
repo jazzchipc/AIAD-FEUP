@@ -40,8 +40,6 @@ namespace GeometryFriendsAgents
 
         private List<AgentMessage> messages;
 
-        private List<Node> diamondsToCatch;
-
         //Area of the game screen
         protected Rectangle area;
 
@@ -58,10 +56,12 @@ namespace GeometryFriendsAgents
         int nextDiamondIndex;
         Path nextDiamondPath;
 
-        // Movement restrictions
-        MovementAnalyser movementRestrictions;
+        List<Node> diamondsToCatch;
+        List<Node> diamondsToCatchCollectively;
 
         Status agentStatus;
+
+        MovementAnalyser movementAnalyser;
 
         public RectangleAgent()
         {
@@ -69,7 +69,6 @@ namespace GeometryFriendsAgents
             implementedAgent = true;
 
             lastMoveTime = DateTime.Now.Second;
-            currentAction = Moves.NO_ACTION;
             rnd = new Random();
 
             //prepare the possible moves  
@@ -82,6 +81,7 @@ namespace GeometryFriendsAgents
             //messages exchange
             messages = new List<AgentMessage>();
             diamondsToCatch = new List<Node>();
+            diamondsToCatchCollectively = new List<Node>();
 
             //status
             agentStatus = new Status();
@@ -106,7 +106,7 @@ namespace GeometryFriendsAgents
 
             this.runAStar(rI, cI, oI, rPI, cPI, colI, area);
 
-            this.movementRestrictions = new MovementAnalyser(this.matrix);
+            this.movementAnalyser = new MovementAnalyser(this.matrix);
 
             InitDiamondsToCatch();
 
@@ -145,7 +145,7 @@ namespace GeometryFriendsAgents
             {           
                 return currentAction;
             }
-                
+
             else
                 return Moves.NO_ACTION;
         }
@@ -184,6 +184,12 @@ namespace GeometryFriendsAgents
                 Node node = this.graph.diamondNodes[nextDiamondIndex];
                 catchNextDiamond(node);
             }
+
+            if (this.diamondsToCatch.Count > 0)
+            {
+                this.currentAction = this.decideActionFromCurrentPath();
+            }
+
 
             this.debugInfo = newDebugInfo.ToArray();
         }
@@ -374,6 +380,7 @@ namespace GeometryFriendsAgents
         public void catchDiamond(Node node)
         {
             System.Diagnostics.Debug.WriteLine("Retangulo - Vou apanhar o diamante: " + node.location);
+            this.diamondsToCatch.Add(node);
             int index = this.graph.diamondNodes.IndexOf(node);
             nextDiamondIndex = index;
         }
@@ -403,7 +410,7 @@ namespace GeometryFriendsAgents
                     {
                         diamondsToCatch.Add(node);
                     }
-                    else if(this.movementRestrictions.canRectangleGet(this.graph.rectangleNode, node))
+                    else if(this.movementAnalyser.canRectangleGet(this.graph.rectangleNode, node))
                     {
                         diamondsToCatch.Add(node);
                     }
@@ -451,7 +458,7 @@ namespace GeometryFriendsAgents
             return move;
         }
 
-        public void MoveToPosition(float x, Moves morph)
+        public Moves MoveToPosition(float x, Moves morph)
         {
             Moves move = Moves.NO_ACTION;
 
@@ -469,6 +476,7 @@ namespace GeometryFriendsAgents
             }
 
             this.currentAction = move;
+            return move;
         }
 
         public Moves Move(Utils.Direction direction, Utils.Quantifier speed)
@@ -544,6 +552,23 @@ namespace GeometryFriendsAgents
             }
 
             return move;
+        }
+
+        public Moves decideActionFromCurrentPath()
+        {
+            Node diamondToCatch = this.graph.diamondNodes[nextDiamondIndex];
+
+            if (Math.Abs(this.rectangleInfo.X - diamondToCatch.location.X) > 50)
+            {
+                return MoveToPosition(diamondToCatch.location.X);
+            }
+            else if (this.rectangleInfo.Y - diamondToCatch.location.Y > 50)
+            {
+                return MoveToPosition(diamondToCatch.location.X, Moves.MORPH_UP);
+            }
+
+            return Moves.NO_ACTION;
+
         }
     }
 
