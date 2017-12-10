@@ -871,11 +871,7 @@ namespace GeometryFriendsAgents
 
         public Moves decideActionFromCurrentPath()
         {
-            if (this.agentStatus.BLOCKED == true)
-            {
-                return Moves.JUMP;
-            }
-            else if (this.diamondsToCatch.Count == 0)
+            if (this.diamondsToCatch.Count == 0)
             {
                 return Moves.NO_ACTION;
             }
