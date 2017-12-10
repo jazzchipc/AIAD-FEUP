@@ -305,9 +305,12 @@ namespace GeometryFriendsAgents
             this.matrix.updateMatrix(rI, cI);
             this.graph.updateGraph(rI, cI);
 
-            SearchParameters searchParameters = new SearchParameters(this.graph.rectangleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
-            PathFinder pathFinder = new PathFinder(searchParameters, this.type);
-            this.nextDiamondPath = pathFinder.FindPath();
+            if (nextDiamondIndex != -1)
+            {
+                SearchParameters searchParameters = new SearchParameters(this.graph.rectangleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
+                PathFinder pathFinder = new PathFinder(searchParameters, this.type);
+                this.nextDiamondPath = pathFinder.FindPath();
+            }
         }
 
         /// <summary>
@@ -402,6 +405,8 @@ namespace GeometryFriendsAgents
             if (this.diamondsToCatch.Contains(node))
             {
                 this.diamondsToCatch.Remove(node);
+                this.nextDiamondPath = null;
+                this.nextDiamondIndex = -1;
             }
 
             this.graph.removeFromKnownPaths(node);
