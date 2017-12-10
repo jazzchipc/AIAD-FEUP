@@ -299,11 +299,25 @@ namespace GeometryFriendsAgents
                     }
                     foreach (CollectibleRepresentation item in toRemove)
                     {
-                        //PARA TESTAR
-                        Node node = this.graph.diamondNodes[nextDiamondIndex];
-                        updateNextDiamond(node);
-
                         uncaughtCollectibles.Remove(item);
+
+                        //PARA TESTAR
+                        Node circleNextNode = this.graph.diamondNodes[nextDiamondIndex];
+                        Point point = new Point((int)item.X, (int)item.Y);
+                        Node caughtNode = new Node(point.X, point.Y, Node.Type.Diamond);
+
+
+
+                        if (point == circleNextNode.location)
+                        {
+                            updateNextDiamond(caughtNode);
+                            SendRequest(new Request(new Command.DeleteDiamond(caughtNode)));
+                        }
+                        else
+                        {
+                            SendRequest(new Request(new Command.CatchNextDiamond(caughtNode)));
+                            deleteDiamond(caughtNode);
+                        }
                     }
                 }
             }
@@ -484,6 +498,15 @@ namespace GeometryFriendsAgents
 
             SearchParameters searchParameters = new SearchParameters(this.graph.circleNode.index, this.graph.diamondNodes[nextDiamondIndex].index, this.graph);
             PathFinder pathFinder = new PathFinder(searchParameters, this.type);
+
+            for(int i = 0; i < this.graph.knownPaths.Count; i++)
+            {
+                if(this.graph.knownPaths[i].getGoalNode() == this.graph.diamondNodes[nextDiamondIndex])
+                {
+                    this.graph.knownPaths[i] = pathFinder.FindPath();
+                }
+            }
+            
         }
 
         #endregion
@@ -852,7 +875,11 @@ namespace GeometryFriendsAgents
             {
                 return Moves.NO_ACTION;
             }
-            if(Math.Abs(this.circleInfo.X - this.nextDiamond.location.X) > 50)
+            else if (this.nextDiamondPath.path[1].type == Node.Type.RectanglePlatform)
+            {
+                return JumpAboveObstacle(this.rectanglePlatformsInfo[2]);
+            }
+            else if (Math.Abs(this.circleInfo.X - this.nextDiamond.location.X) > 50)
             {
                 return RollToPosition(this.nextDiamond.location.X, this.nextDiamond.location.Y);
             }
@@ -860,6 +887,7 @@ namespace GeometryFriendsAgents
             {
                 return Moves.JUMP;
             }
+            
 
             return Moves.NO_ACTION;
             
@@ -954,19 +982,7 @@ namespace GeometryFriendsAgents
 
         public void updateNextDiamond(Node node)
         {
-            System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
-
-            if (this.diamondsToCatch.Contains(node))
-            {
-                this.diamondsToCatch.Remove(node);
-            }
-
-            if (this.diamondsToCatchCollectivelly.Contains(node))
-            {
-                this.diamondsToCatchCollectivelly.Remove(node);
-            }
-            
-            this.graph.removeFromKnownPaths(node);
+            this.deleteDiamond(node);
 
             Path path = null;
 
@@ -984,6 +1000,23 @@ namespace GeometryFriendsAgents
                 this.nextDiamondPath = path;
                 catchDiamond(path.getGoalNode());
             }
+        }
+
+        public void deleteDiamond(Node node)
+        {
+            System.Diagnostics.Debug.WriteLine("Circulo - Vou apagar o diamante: " + node.location);
+
+            if (this.diamondsToCatch.Contains(node))
+            {
+                this.diamondsToCatch.Remove(node);
+            }
+
+            if (this.diamondsToCatchCollectivelly.Contains(node))
+            {
+                this.diamondsToCatchCollectivelly.Remove(node);
+            }
+
+            this.graph.removeFromKnownPaths(node);
         }
 
         public void initDiamondsToCatch()

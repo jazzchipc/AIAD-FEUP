@@ -38,6 +38,20 @@ namespace GeometryFriendsAgents
             return true;
         }
 
+        public bool circleHasPlatformBelowDiamond(Node diamondToGetNode)
+        {
+            for (int i = diamondToGetNode.location.Y; i < diamondToGetNode.location.Y + CIRCLE_JUMP_MAX_HEIGHT + 100; i++)
+            {
+                if (this.matrix.getPixel(diamondToGetNode.location.X, i).type == Pixel.Type.RectanglePlatform ||
+                    this.matrix.getPixel(diamondToGetNode.location.X, i).type == Pixel.Type.Obstacle)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool canRectangleGet(Node rectangleNode, Node diamondToGetNode)
         {
             return (this.rectangleReachesWithMorphUp(rectangleNode, diamondToGetNode) &&

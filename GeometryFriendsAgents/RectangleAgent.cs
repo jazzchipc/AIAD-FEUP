@@ -380,21 +380,32 @@ namespace GeometryFriendsAgents
         public void catchDiamond(Node node)
         {
             System.Diagnostics.Debug.WriteLine("Retangulo - Vou apanhar o diamante: " + node.location);
-            this.diamondsToCatch.Add(node);
             int index = this.graph.diamondNodes.IndexOf(node);
             nextDiamondIndex = index;
         }
 
         public void catchNextDiamond(Node node)
         {
-            System.Diagnostics.Debug.WriteLine("Retangulo - Vou apagar o diamante: " + node.location);
-            diamondsToCatch.Remove(node);
-
-            this.graph.removeFromKnownPaths(node);
+            deleteDiamond(node);
             
             Path path = this.graph.getCheapestPath(this.diamondsToCatch);
             if (path != null)
                 catchDiamond(path.getGoalNode());
+        }
+
+        public void deleteDiamond(Node node)
+        {
+            node.type = Node.Type.Diamond;
+
+            System.Diagnostics.Debug.WriteLine("Retangulo - Vou apagar o diamante: " + node.location);
+
+            if (this.diamondsToCatch.Contains(node))
+            {
+                this.diamondsToCatch.Remove(node);
+            }
+
+            this.graph.removeFromKnownPaths(node);
+
         }
 
         public void InitDiamondsToCatch()

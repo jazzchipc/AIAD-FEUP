@@ -158,5 +158,21 @@ namespace GeometryFriendsAgents
                 return null;
             }
         }
+
+        internal class DeleteDiamond : Command
+        {
+            private Node node;
+
+            public DeleteDiamond(Node node)
+            {
+                this.node = node;
+            }
+
+            public override Object execute(RectangleAgent executor)
+            {
+                executor.deleteDiamond(node);
+                return null;
+            }
+        }
     }
 }
